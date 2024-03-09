@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Define.h"
+#include "Packet.h"
 #pragma comment (lib, "mswsock.lib")
 
 enum CONNECTION_STATUS {
@@ -96,9 +97,14 @@ public:
 		return true;
 	}
 
-	bool EchoMsg(char* msg) {
+	bool SendMsg(char* msg) {
+		EchoPacket echoPkt;
+		echoPkt.packetID = (UINT16)PACKET_ID::ECHO_REQUEST;
+		echoPkt.packetSize = sizeof(EchoPacket);
+		CopyMemory(echoPkt.msg, msg, sizeof(msg));
+
 		ZeroMemory(sendBuffer, BUFFER_SIZE);
-		CopyMemory(sendBuffer, msg, sizeof(msg));
+		CopyMemory(sendBuffer, &echoPkt, sizeof(echoPkt));
 		ZeroMemory(&sendOverlappedEx, sizeof(WSAOverlappedEx));
 		sendOverlappedEx.operation = IOOperation::SEND;
 		sendOverlappedEx.clientIndex = index;

@@ -55,10 +55,16 @@ public:
 	}
 
 	void Send(string msg) {
-		int ret = send(sock, msg.c_str(), sizeof(msg), 0);
+		EchoPacket echoPkt;
+		echoPkt.packetID = (UINT16)PACKET_ID::ECHO_REQUEST;
+		echoPkt.packetSize = sizeof(EchoPacket);
+		CopyMemory(echoPkt.msg, msg.c_str(), sizeof(msg));
+		
+		int ret = send(sock, (char*) &echoPkt, sizeof(EchoPacket), 0);
 		if (ret == -1) {
 			printf("[FAILED]전송에 실패했습니다.\n");
 		}
+		printf("전송완료\n");
 	}
 
 	void End() {
@@ -83,8 +89,9 @@ public:
 				cout << "수신 실패." << endl;
 				continue;
 			}
+			EchoPacket* echoPkt = reinterpret_cast<EchoPacket*>(buf);
 
-			cout << "Server response: " << buf << endl;
+			cout << "Server response: " <<echoPkt->msg << endl;
 		}
 	}
 };

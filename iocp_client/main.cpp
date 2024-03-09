@@ -20,6 +20,7 @@ int main(void) {
 	string msg;
 	while (1) {
 		cout << "메시지를 입력하세요(종료는 exit): ";
+		//getline(cin, msg);
 		cin >> msg;
 		if (msg == "exit") {
 			isRecvRun = false;
@@ -29,6 +30,6 @@ int main(void) {
 		Sleep(3);
 	}
 	network.End();
-	cout << "서버 종료." << endl;
+	cout << "프로그램 종료." << endl;
 	return 0;
 }

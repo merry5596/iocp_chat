@@ -67,7 +67,7 @@ public:
 		if (retHandle == NULL) {
 			printf("[ERROR]CreateIoCompletionPort()(bind listener) error: %d", WSAGetLastError());
 		}
-		
+
 		printf("[SUCCESS]IOCP Initialization finished.\n");
 		return true;
 	}
@@ -103,6 +103,13 @@ public:
 			accepterThread.join();
 		}
 	}
+
+	Client* GetClient(UINT32 clientIndex) {
+		return clientPool[clientIndex];
+	}
+
+	virtual void OnReceive(UINT32 clientIndex, char* msg) {}
+	virtual void OnSend(UINT32 clientIndex, char* msg) {}
 
 private:
 	void CreateClientPool(UINT16 CLIENTPOOL_SIZE) {
@@ -153,17 +160,16 @@ private:
 				}
 			}
 			else if (wsaOverlappedEx->operation == IOOperation::RECV) {
-				printf("[RECV]client index: %d\n", wsaOverlappedEx->clientIndex);
-				//Echo
-				completionKey->EchoMsg(wsaOverlappedEx->wsaBuf.buf);
+				OnReceive(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.buf);
 				completionKey->PostReceive();
 			}
 			else if (wsaOverlappedEx->operation == IOOperation::SEND) {
-				printf("[SEND]client index: %d\n", wsaOverlappedEx->clientIndex);
+				OnSend(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.buf);
 			}
 			else {
 				printf("[EXCEPTION]client index: %d\n", wsaOverlappedEx->clientIndex);
 			}
 		}
 	}
+
 };
