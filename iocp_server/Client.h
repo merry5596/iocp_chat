@@ -115,4 +115,18 @@ public:
 
 		return true;
 	}
+
+	void CloseSocket(bool isForce = false) {
+		linger lingerOpt = { 0, 0 };
+		//강제 종료 시, 대기 안하고 즉시 종료
+		if (isForce) {
+			lingerOpt.l_onoff = 1;
+		}
+
+		shutdown(acceptSocket, SD_BOTH);	//송수신 both 중단
+		setsockopt(acceptSocket, SOL_SOCKET, SO_LINGER, (const char*) & lingerOpt, sizeof(linger));
+		closesocket(acceptSocket);
+
+		status = CONNECTION_STATUS::READY;
+	}
 };

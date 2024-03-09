@@ -129,12 +129,16 @@ private:
 		LPOVERLAPPED lpOverlapped = nullptr;
 		while (isWorkerRun) {
 			bool ret = GetQueuedCompletionStatus(IOCPHandle, &bytes, (PULONG_PTR)&completionKey, &lpOverlapped, INFINITE);
-			if (lpOverlapped == NULL) {	//IOCPHandle Close 되면 ret == false, lpOverlapped = NULL 반환
+
+			//IOCPHandle Close 되면 ret == false, lpOverlapped = NULL 반환
+			if (lpOverlapped == NULL) {
 				continue;
 			}
+
+			//연결 끊김
 			if (ret == false) {
-				printf("[ERROR]GetQueuedCompletionStatus() error: %d, clientIndex:%d\n", WSAGetLastError(), completionKey->GetIndex());
-				printf("Error #64 is ERROR_NETNAME_DELETED. Client에서 강제 종료한 것이므로 예외처리하자\n");
+				completionKey->CloseSocket();
+				printf("[CLOSE]client index:%d\n", completionKey->GetIndex());
 				continue;
 			}
 
