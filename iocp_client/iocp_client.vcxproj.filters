@@ -6,5 +6,6 @@
   <ItemGroup>
     <ClInclude Include="Packet.h" />
     <ClInclude Include="ClientNetwork.h" />
+    <ClInclude Include="Define.h" />
   </ItemGroup>
 </Project>

@@ -26,7 +26,7 @@ public:
 		//Winsock 사용
 		WSAData wsaData;
 		auto ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
-		if (ret != 0) {	//실패
+		if (ret != 0) {
 			printf("[ERROR]WSAStartup() error: %d", WSAGetLastError());
 			return false;
 		}
@@ -56,11 +56,13 @@ public:
 			return false;
 		}
 
-		//IOCP 핸들러에 등록(GQCS 받겠다)
+		//IOCP 핸들러 생성
 		IOCPHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, THREADPOOL_SIZE);
 		if (IOCPHandle == NULL) {
 			printf("[ERROR]CreateIoCompletionPort()(create) error: %d", WSAGetLastError());
 		}
+
+		//IOCP 핸들러에 등록(GQCS 받겠다)
 		HANDLE retHandle = CreateIoCompletionPort((HANDLE)listenSocket, IOCPHandle, 0, 0);
 		if (retHandle == NULL) {
 			printf("[ERROR]CreateIoCompletionPort()(bind listener) error: %d", WSAGetLastError());
@@ -139,8 +141,7 @@ private:
 			WSAOverlappedEx* wsaOverlappedEx = (WSAOverlappedEx*)lpOverlapped;
 			if (wsaOverlappedEx->operation == IOOperation::ACCEPT) {
 				printf("[ACCEPT]client index: %d\n", wsaOverlappedEx->clientIndex);
-
-				//IOCP에 device로 등록
+				//IOCP에 등록
 				auto client = clientPool[wsaOverlappedEx->clientIndex];
 				ret = client->ConnectIOCP(IOCPHandle);
 				if (ret == false) {
@@ -150,7 +151,6 @@ private:
 			else if (wsaOverlappedEx->operation == IOOperation::RECV) {
 				printf("[RECV]client index: %d\n", wsaOverlappedEx->clientIndex);
 				//Echo
-				//...
 				completionKey->EchoMsg(wsaOverlappedEx->wsaBuf.buf);
 				completionKey->PostReceive();
 			}

@@ -40,11 +40,12 @@ public:
 	bool PostAccept(SOCKET listenSocket) {
 		acceptSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 		if (acceptSocket == INVALID_SOCKET) {
-			printf("[ERROR]acceptSocket() error: %d\n", WSAGetLastError());
+			printf("[ERROR]WSASocket() error: %d\n", WSAGetLastError());
 			return false;
 		}
 
 		DWORD bytes = 0;
+		ZeroMemory(acceptBuffer, BUFFER_SIZE);
 		ZeroMemory(&acceptOverlappedEx, sizeof(WSAOverlappedEx));
 		acceptOverlappedEx.operation = IOOperation::ACCEPT;
 		acceptOverlappedEx.clientIndex = index;
@@ -68,14 +69,16 @@ public:
 		}
 
 		bool ret = PostReceive();
-		if (ret == false) return false;
+		if (ret == false) {
+			return false;
+		}
+		
 		return true;
-
 	}
 
 	bool PostReceive() {
-		ZeroMemory(&recvOverlappedEx, sizeof(WSAOverlappedEx));
 		ZeroMemory(recvBuffer, BUFFER_SIZE);
+		ZeroMemory(&recvOverlappedEx, sizeof(WSAOverlappedEx));
 		recvOverlappedEx.operation = IOOperation::RECV;
 		recvOverlappedEx.clientIndex = index;
 		recvOverlappedEx.wsaBuf.len = BUFFER_SIZE;
@@ -94,10 +97,9 @@ public:
 	}
 
 	bool EchoMsg(char* msg) {
-		ZeroMemory(&sendOverlappedEx, sizeof(WSAOverlappedEx));
 		ZeroMemory(sendBuffer, BUFFER_SIZE);
 		CopyMemory(sendBuffer, msg, sizeof(msg));
-
+		ZeroMemory(&sendOverlappedEx, sizeof(WSAOverlappedEx));
 		sendOverlappedEx.operation = IOOperation::SEND;
 		sendOverlappedEx.clientIndex = index;
 		sendOverlappedEx.wsaBuf.len = BUFFER_SIZE;
@@ -105,7 +107,6 @@ public:
 		DWORD bufCnt = 1;	//버퍼 개수. 일반적으로 1개로 설정
 		DWORD bytes = 0;
 		DWORD flags = 0;
-
 		int ret = WSASend(acceptSocket, &(sendOverlappedEx.wsaBuf), bufCnt, &bytes, flags, (LPWSAOVERLAPPED)&sendOverlappedEx, NULL);
 		if (ret != 0 && WSAGetLastError() != ERROR_IO_PENDING) {
 			printf("[ERROR]WSASend() error: %d\n", WSAGetLastError());
