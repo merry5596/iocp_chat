@@ -96,7 +96,26 @@ public:
 
 		return true;
 	}
+	bool SendData(char* data, UINT16 size) {
+		ZeroMemory(sendBuffer, BUFFER_SIZE);
+		CopyMemory(sendBuffer, data, size);
+		ZeroMemory(&sendOverlappedEx, sizeof(WSAOverlappedEx));
+		sendOverlappedEx.operation = IOOperation::SEND;
+		sendOverlappedEx.clientIndex = index;
+		sendOverlappedEx.wsaBuf.len = BUFFER_SIZE;
+		sendOverlappedEx.wsaBuf.buf = sendBuffer;
+		DWORD bufCnt = 1;	//버퍼 개수. 일반적으로 1개로 설정
+		DWORD bytes = 0;
+		DWORD flags = 0;
+		int ret = WSASend(acceptSocket, &(sendOverlappedEx.wsaBuf), bufCnt, &bytes, flags, (LPWSAOVERLAPPED)&sendOverlappedEx, NULL);
+		if (ret != 0 && WSAGetLastError() != ERROR_IO_PENDING) {
+			printf("[ERROR]WSASend() error: %d\n", WSAGetLastError());
+			return false;
+		}
 
+		return true;
+	}
+	/*
 	bool SendMsg(char* msg) {
 		EchoPacket echoPkt;
 		echoPkt.packetID = (UINT16)PACKET_ID::ECHO_REQUEST;
@@ -121,7 +140,7 @@ public:
 
 		return true;
 	}
-
+	*/
 	void CloseSocket(bool isForce = false) {
 		linger lingerOpt = { 0, 0 };
 		//강제 종료 시, 대기 안하고 즉시 종료

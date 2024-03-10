@@ -4,7 +4,7 @@
 #include <vector>
 
 enum class PACKET_ID : UINT16 {
-	ECHO_REQUEST = 0,
+	ECHO_REQUEST = 1,
 };
 
 struct PacketInfo {

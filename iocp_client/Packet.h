@@ -4,15 +4,7 @@
 #include <vector>
 
 enum class PACKET_ID : UINT16 {
-	ECHO_REQUEST = 0,
-};
-
-struct PacketInfo {
-	UINT32 clientIndex = 0;
-	UINT16 packetID = 0;
-	UINT16 packetSize = 0;
-	char packetData[10];
-	//std::vector<uint8_t> packetData;
+	ECHO_REQUEST = 1,
 };
 
 #pragma pack(push, 1)

@@ -132,9 +132,13 @@
     <ClInclude Include="EchoServer.h" />
     <ClInclude Include="IOCPServer.h" />
     <ClInclude Include="Packet.h" />
+    <ClInclude Include="PacketManager.h" />
+    <ClInclude Include="User.h" />
+    <ClInclude Include="UserManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PacketManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

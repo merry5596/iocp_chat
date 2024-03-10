@@ -22,7 +22,7 @@ public:
 		}
 	}
 
-	int IOCPInit(UINT16 SERVER_PORT) {
+	int IOCPInit(UINT16 SERVER_PORT, UINT16 CLIENTPOOL_SIZE) {
 		//Winsock 사용
 		WSAData wsaData;
 		auto ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -68,13 +68,14 @@ public:
 			printf("[ERROR]CreateIoCompletionPort()(bind listener) error: %d", WSAGetLastError());
 		}
 
+		//커넥션 풀 생성
+		CreateClientPool(CLIENTPOOL_SIZE);
+
 		printf("[SUCCESS]IOCP Initialization finished.\n");
 		return true;
 	}
 
-	void IOCPStart(UINT16 CLIENTPOOL_SIZE) {
-		CreateClientPool(CLIENTPOOL_SIZE);
-
+	void IOCPStart() {
 		//Accept 스레드 시작
 		accepterThread = thread([this]() { AccepterThread(); });
 		isAccepterRun = true;
@@ -104,12 +105,17 @@ public:
 		}
 	}
 
+	void SendData(UINT32 clientIndex, char* data, UINT16 size) {
+		clientPool[clientIndex]->SendData(data, size);
+	}
+
 	Client* GetClient(UINT32 clientIndex) {
 		return clientPool[clientIndex];
 	}
-
-	virtual void OnReceive(UINT32 clientIndex, char* msg) {}
-	virtual void OnSend(UINT32 clientIndex, char* msg) {}
+	virtual void OnConnect(UINT32 clientIndex) {}
+	virtual void OnReceive(UINT32 clientIndex, char* data, UINT16 size) {}
+	virtual void OnSend(UINT32 clientIndex, UINT16 size) {}
+	virtual void OnDisconnect(UINT32 clientIndex) {}
 
 private:
 	void CreateClientPool(UINT16 CLIENTPOOL_SIZE) {
@@ -145,13 +151,13 @@ private:
 			//연결 끊김
 			if (ret == false) {
 				completionKey->CloseSocket();
-				printf("[CLOSE]client index:%d\n", completionKey->GetIndex());
+				OnDisconnect(completionKey->GetIndex());
 				continue;
 			}
 
 			WSAOverlappedEx* wsaOverlappedEx = (WSAOverlappedEx*)lpOverlapped;
 			if (wsaOverlappedEx->operation == IOOperation::ACCEPT) {
-				printf("[ACCEPT]client index: %d\n", wsaOverlappedEx->clientIndex);
+				OnConnect(wsaOverlappedEx->clientIndex);
 				//IOCP에 등록
 				auto client = clientPool[wsaOverlappedEx->clientIndex];
 				ret = client->ConnectIOCP(IOCPHandle);
@@ -160,11 +166,11 @@ private:
 				}
 			}
 			else if (wsaOverlappedEx->operation == IOOperation::RECV) {
-				OnReceive(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.buf);
+				OnReceive(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.buf, wsaOverlappedEx->wsaBuf.len);
 				completionKey->PostReceive();
 			}
 			else if (wsaOverlappedEx->operation == IOOperation::SEND) {
-				OnSend(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.buf);
+				OnSend(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.len);
 			}
 			else {
 				printf("[EXCEPTION]client index: %d\n", wsaOverlappedEx->clientIndex);
