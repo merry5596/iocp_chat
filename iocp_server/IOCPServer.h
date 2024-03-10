@@ -22,11 +22,11 @@ public:
 		}
 	}
 
-	int IOCPInit(UINT16 SERVER_PORT) {
+	int IOCPInit(UINT16 SERVER_PORT, UINT16 CLIENTPOOL_SIZE) {
 		//Winsock 사용
 		WSAData wsaData;
 		auto ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
-		if (ret != 0) {	//실패
+		if (ret != 0) {
 			printf("[ERROR]WSAStartup() error: %d", WSAGetLastError());
 			return false;
 		}
@@ -56,23 +56,26 @@ public:
 			return false;
 		}
 
-		//IOCP 핸들러에 등록(GQCS 받겠다)
+		//IOCP 핸들러 생성
 		IOCPHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, THREADPOOL_SIZE);
 		if (IOCPHandle == NULL) {
 			printf("[ERROR]CreateIoCompletionPort()(create) error: %d", WSAGetLastError());
 		}
+
+		//IOCP 핸들러에 등록(GQCS 받겠다)
 		HANDLE retHandle = CreateIoCompletionPort((HANDLE)listenSocket, IOCPHandle, 0, 0);
 		if (retHandle == NULL) {
 			printf("[ERROR]CreateIoCompletionPort()(bind listener) error: %d", WSAGetLastError());
 		}
-		
+
+		//커넥션 풀 생성
+		CreateClientPool(CLIENTPOOL_SIZE);
+
 		printf("[SUCCESS]IOCP Initialization finished.\n");
 		return true;
 	}
 
-	void IOCPStart(UINT16 CLIENTPOOL_SIZE) {
-		CreateClientPool(CLIENTPOOL_SIZE);
-
+	void IOCPStart() {
 		//Accept 스레드 시작
 		accepterThread = thread([this]() { AccepterThread(); });
 		isAccepterRun = true;
@@ -102,6 +105,18 @@ public:
 		}
 	}
 
+	void SendData(UINT32 clientIndex, char* data, UINT16 size) {
+		clientPool[clientIndex]->SendData(data, size);
+	}
+
+	Client* GetClient(UINT32 clientIndex) {
+		return clientPool[clientIndex];
+	}
+	virtual void OnConnect(UINT32 clientIndex) {}
+	virtual void OnReceive(UINT32 clientIndex, char* data, UINT16 size) {}
+	virtual void OnSend(UINT32 clientIndex, UINT16 size) {}
+	virtual void OnDisconnect(UINT32 clientIndex) {}
+
 private:
 	void CreateClientPool(UINT16 CLIENTPOOL_SIZE) {
 		for (int i = 0; i < CLIENTPOOL_SIZE; i++) {
@@ -127,20 +142,23 @@ private:
 		LPOVERLAPPED lpOverlapped = nullptr;
 		while (isWorkerRun) {
 			bool ret = GetQueuedCompletionStatus(IOCPHandle, &bytes, (PULONG_PTR)&completionKey, &lpOverlapped, INFINITE);
-			if (lpOverlapped == NULL) {	//IOCPHandle Close 되면 ret == false, lpOverlapped = NULL 반환
+
+			//IOCPHandle Close 되면 ret == false, lpOverlapped = NULL 반환
+			if (lpOverlapped == NULL) {
 				continue;
 			}
+
+			//연결 끊김
 			if (ret == false) {
-				printf("[ERROR]GetQueuedCompletionStatus() error: %d, clientIndex:%d\n", WSAGetLastError(), completionKey->GetIndex());
-				printf("Error #64 is ERROR_NETNAME_DELETED. Client에서 강제 종료한 것이므로 예외처리하자\n");
+				completionKey->CloseSocket();
+				OnDisconnect(completionKey->GetIndex());
 				continue;
 			}
 
 			WSAOverlappedEx* wsaOverlappedEx = (WSAOverlappedEx*)lpOverlapped;
 			if (wsaOverlappedEx->operation == IOOperation::ACCEPT) {
-				printf("[ACCEPT]client index: %d\n", wsaOverlappedEx->clientIndex);
-
-				//IOCP에 device로 등록
+				OnConnect(wsaOverlappedEx->clientIndex);
+				//IOCP에 등록
 				auto client = clientPool[wsaOverlappedEx->clientIndex];
 				ret = client->ConnectIOCP(IOCPHandle);
 				if (ret == false) {
@@ -148,18 +166,16 @@ private:
 				}
 			}
 			else if (wsaOverlappedEx->operation == IOOperation::RECV) {
-				printf("[RECV]client index: %d\n", wsaOverlappedEx->clientIndex);
-				//Echo
-				//...
-				completionKey->EchoMsg(wsaOverlappedEx->wsaBuf.buf);
+				OnReceive(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.buf, wsaOverlappedEx->wsaBuf.len);
 				completionKey->PostReceive();
 			}
 			else if (wsaOverlappedEx->operation == IOOperation::SEND) {
-				printf("[SEND]client index: %d\n", wsaOverlappedEx->clientIndex);
+				OnSend(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.len);
 			}
 			else {
 				printf("[EXCEPTION]client index: %d\n", wsaOverlappedEx->clientIndex);
 			}
 		}
 	}
+
 };
