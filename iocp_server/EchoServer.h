@@ -11,19 +11,22 @@ public:
 	void Init(const UINT16 SERVER_PORT, const UINT16 CLIENTPOOL_SIZE) {
 		packetManager = std::make_unique<PacketManager>();
 		packetManager->Init(CLIENTPOOL_SIZE);
-		packetManager->SendDataFunc = [&](UINT32 clientIndex, char* data, UINT16 size) { SendData(clientIndex, data, size); };
+		packetManager->SendData = [&](UINT32 clientIndex, char* data, UINT16 size) { SendData(clientIndex, data, size); };
 		IOCPInit(SERVER_PORT, CLIENTPOOL_SIZE);
 	}
 
 	void Start() {
 		packetManager->Start();
 		IOCPStart();
+		cout << "Echo Server Start!" << endl;
 	}
 
 	void End() {
 		packetManager->End();
 		IOCPEnd();
+		cout << "Echo Server End..." << endl;
 	}
+
 	virtual void OnConnect(UINT32 clientIndex) {
 		printf("[ACCEPT]client index: %d\n", clientIndex);
 	}

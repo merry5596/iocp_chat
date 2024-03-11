@@ -10,6 +10,7 @@ private:
 	HANDLE IOCPHandle;
 	SOCKET listenSocket;
 	vector<Client*> clientPool;
+
 	thread accepterThread;
 	vector<thread> workerThreadPool;
 	bool isAccepterRun;
@@ -71,22 +72,19 @@ public:
 		//커넥션 풀 생성
 		CreateClientPool(CLIENTPOOL_SIZE);
 
-		printf("[SUCCESS]IOCP Initialization finished.\n");
 		return true;
 	}
 
 	void IOCPStart() {
-		//Accept 스레드 시작
-		accepterThread = thread([this]() { AccepterThread(); });
-		isAccepterRun = true;
-
 		//Receive 스레드 시작
+		isWorkerRun = true;
 		for (int i = 0; i < THREADPOOL_SIZE; i++) {
 			workerThreadPool.emplace_back([this]() { WorkerThread(); });
 		}
-		isWorkerRun = true;
 
-		printf("[SUCCESS]IOCP started.\n");
+		//Accept 스레드 시작
+		isAccepterRun = true;
+		accepterThread = thread([this]() { AccepterThread(); });
 	}
 
 	void IOCPEnd() {
@@ -103,15 +101,13 @@ public:
 		if (accepterThread.joinable()) {
 			accepterThread.join();
 		}
+
 	}
 
 	void SendData(UINT32 clientIndex, char* data, UINT16 size) {
 		clientPool[clientIndex]->SendData(data, size);
 	}
 
-	Client* GetClient(UINT32 clientIndex) {
-		return clientPool[clientIndex];
-	}
 	virtual void OnConnect(UINT32 clientIndex) {}
 	virtual void OnReceive(UINT32 clientIndex, char* data, UINT16 size) {}
 	virtual void OnSend(UINT32 clientIndex, UINT16 size) {}
@@ -126,7 +122,6 @@ private:
 
 	void AccepterThread() {
 		while (isAccepterRun) {
-			//놀고있는 커넥션에게 accept 예약 걸기
 			for (auto client : clientPool) {
 				if (client->GetStatus() == CONNECTION_STATUS::READY) {
 					client->PostAccept(listenSocket);
@@ -138,10 +133,10 @@ private:
 
 	void WorkerThread() {
 		DWORD bytes = 0;
-		Client* completionKey = nullptr;
+		Client* client = nullptr;
 		LPOVERLAPPED lpOverlapped = nullptr;
 		while (isWorkerRun) {
-			bool ret = GetQueuedCompletionStatus(IOCPHandle, &bytes, (PULONG_PTR)&completionKey, &lpOverlapped, INFINITE);
+			bool ret = GetQueuedCompletionStatus(IOCPHandle, &bytes, (PULONG_PTR)&client, &lpOverlapped, INFINITE);
 
 			//IOCPHandle Close 되면 ret == false, lpOverlapped = NULL 반환
 			if (lpOverlapped == NULL) {
@@ -150,8 +145,8 @@ private:
 
 			//연결 끊김
 			if (ret == false) {
-				completionKey->CloseSocket();
-				OnDisconnect(completionKey->GetIndex());
+				client->CloseSocket();
+				OnDisconnect(client->GetIndex());
 				continue;
 			}
 
@@ -167,15 +162,15 @@ private:
 			}
 			else if (wsaOverlappedEx->operation == IOOperation::RECV) {
 				OnReceive(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.buf, wsaOverlappedEx->wsaBuf.len);
-				completionKey->PostReceive();
+				client->PostReceive();
 			}
 			else if (wsaOverlappedEx->operation == IOOperation::SEND) {
 				OnSend(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.len);
+				client->SendCompleted();
 			}
 			else {
 				printf("[EXCEPTION]client index: %d\n", wsaOverlappedEx->clientIndex);
 			}
 		}
 	}
-
 };

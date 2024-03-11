@@ -12,13 +12,12 @@ int main(void) {
 	server.Start();
 	while (true) {
 		std::string key;
-		cout << "exit를 입력하면 서버 종료됨" << endl;
+		cout << "press \'exit\' to exit" << endl;
 		cin >> key;
 		if (key == "exit") {
 			break;
 		}
 	}
 	server.End();
-	cout << "서버 종료" << endl;
 	return 0;
 }
