@@ -2,6 +2,8 @@
 
 #include "Define.h"
 #include "Packet.h"
+
+#include <mutex>
 #pragma comment (lib, "mswsock.lib")
 
 enum CONNECTION_STATUS {
@@ -23,8 +25,8 @@ private:
 
 	char sendBuffer[BUFFER_SIZE];
 	WSAOverlappedEx sendOverlappedEx;
-
-
+	
+	mutex mtx;
 //	UINT32 latestClosedTime = 0;
 public:
 	Client();
@@ -77,25 +79,29 @@ public:
 		return true;
 	}
 
-	bool PostReceive() {
-		ZeroMemory(recvBuffer, BUFFER_SIZE);
-		ZeroMemory(&recvOverlappedEx, sizeof(WSAOverlappedEx));
-		recvOverlappedEx.operation = IOOperation::RECV;
-		recvOverlappedEx.clientIndex = index;
-		recvOverlappedEx.wsaBuf.len = BUFFER_SIZE;
-		recvOverlappedEx.wsaBuf.buf = recvBuffer;
+	bool PostReceive() {	//멀티 스레드 접근 가능함. 두번의 recv가 같이 올수도있으니까.  
 		DWORD bufCnt = 1;	//버퍼 개수. 일반적으로 1개로 설정
 		DWORD bytes = 0;
 		DWORD flags = 0;
-		int ret = WSARecv(acceptSocket, &(recvOverlappedEx.wsaBuf), bufCnt, &bytes, &flags, (LPWSAOVERLAPPED) & recvOverlappedEx, NULL);
-		if (ret != 0 && WSAGetLastError() != ERROR_IO_PENDING) {
-			printf("[ERROR]WSARecv() error: %d\n", WSAGetLastError());
-			return false;
+		{
+			lock_guard<mutex> lock(mtx);
+			ZeroMemory(recvBuffer, BUFFER_SIZE);
+			ZeroMemory(&recvOverlappedEx, sizeof(WSAOverlappedEx));
+			recvOverlappedEx.operation = IOOperation::RECV;
+			recvOverlappedEx.clientIndex = index;
+			recvOverlappedEx.wsaBuf.len = BUFFER_SIZE;
+			recvOverlappedEx.wsaBuf.buf = recvBuffer;
+			int ret = WSARecv(acceptSocket, &(recvOverlappedEx.wsaBuf), bufCnt, &bytes, &flags, (LPWSAOVERLAPPED) & recvOverlappedEx, NULL);
+			if (ret != 0 && WSAGetLastError() != ERROR_IO_PENDING) {
+				printf("[ERROR]WSARecv() error: %d\n", WSAGetLastError());
+				return false;
+			}
 		}
 		status = CONNECTION_STATUS::CONNECTING;
 
 		return true;
 	}
+
 	bool SendData(char* data, UINT16 size) {
 		ZeroMemory(sendBuffer, BUFFER_SIZE);
 		CopyMemory(sendBuffer, data, size);
@@ -115,32 +121,7 @@ public:
 
 		return true;
 	}
-	/*
-	bool SendMsg(char* msg) {
-		EchoPacket echoPkt;
-		echoPkt.packetID = (UINT16)PACKET_ID::ECHO_REQUEST;
-		echoPkt.packetSize = sizeof(EchoPacket);
-		CopyMemory(echoPkt.msg, msg, sizeof(msg));
 
-		ZeroMemory(sendBuffer, BUFFER_SIZE);
-		CopyMemory(sendBuffer, &echoPkt, sizeof(echoPkt));
-		ZeroMemory(&sendOverlappedEx, sizeof(WSAOverlappedEx));
-		sendOverlappedEx.operation = IOOperation::SEND;
-		sendOverlappedEx.clientIndex = index;
-		sendOverlappedEx.wsaBuf.len = BUFFER_SIZE;
-		sendOverlappedEx.wsaBuf.buf = sendBuffer;
-		DWORD bufCnt = 1;	//버퍼 개수. 일반적으로 1개로 설정
-		DWORD bytes = 0;
-		DWORD flags = 0;
-		int ret = WSASend(acceptSocket, &(sendOverlappedEx.wsaBuf), bufCnt, &bytes, flags, (LPWSAOVERLAPPED)&sendOverlappedEx, NULL);
-		if (ret != 0 && WSAGetLastError() != ERROR_IO_PENDING) {
-			printf("[ERROR]WSASend() error: %d\n", WSAGetLastError());
-			return false;
-		}
-
-		return true;
-	}
-	*/
 	void CloseSocket(bool isForce = false) {
 		linger lingerOpt = { 0, 0 };
 		//강제 종료 시, 대기 안하고 즉시 종료

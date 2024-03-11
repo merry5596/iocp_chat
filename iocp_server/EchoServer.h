@@ -11,7 +11,7 @@ public:
 	void Init(const UINT16 SERVER_PORT, const UINT16 CLIENTPOOL_SIZE) {
 		packetManager = std::make_unique<PacketManager>();
 		packetManager->Init(CLIENTPOOL_SIZE);
-		packetManager->SendDataFunc = [&](UINT32 clientIndex, char* data, UINT16 size) { SendData(clientIndex, data, size); };
+		packetManager->SendData = [&](UINT32 clientIndex, char* data, UINT16 size) { SendData(clientIndex, data, size); };
 		IOCPInit(SERVER_PORT, CLIENTPOOL_SIZE);
 	}
 
