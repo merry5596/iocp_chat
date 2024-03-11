@@ -13,10 +13,8 @@ private:
 
 	thread accepterThread;
 	vector<thread> workerThreadPool;
-	thread senderThread;
 	bool isAccepterRun;
 	bool isWorkerRun;
-	bool isSenderRun;
 public:
 	~IOCPServer() {
 		WSACleanup();
@@ -78,10 +76,6 @@ public:
 	}
 
 	void IOCPStart() {
-		//Send 스레드 시작
-		isSenderRun = true;
-		senderThread = thread([&]() { SenderThread(); });
-
 		//Receive 스레드 시작
 		isWorkerRun = true;
 		for (int i = 0; i < THREADPOOL_SIZE; i++) {
@@ -106,11 +100,6 @@ public:
 		closesocket(listenSocket);
 		if (accepterThread.joinable()) {
 			accepterThread.join();
-		}
-
-		isSenderRun = false;
-		if (senderThread.joinable()) {
-			senderThread.join();
 		}
 
 	}
@@ -182,12 +171,6 @@ private:
 			else {
 				printf("[EXCEPTION]client index: %d\n", wsaOverlappedEx->clientIndex);
 			}
-		}
-	}
-
-	void SenderThread() {
-		while (isSenderRun) {
-		
 		}
 	}
 };
