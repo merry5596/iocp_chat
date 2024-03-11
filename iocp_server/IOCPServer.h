@@ -13,8 +13,10 @@ private:
 
 	thread accepterThread;
 	vector<thread> workerThreadPool;
+	thread senderThread;
 	bool isAccepterRun;
 	bool isWorkerRun;
+	bool isSenderRun;
 public:
 	~IOCPServer() {
 		WSACleanup();
@@ -72,22 +74,23 @@ public:
 		//커넥션 풀 생성
 		CreateClientPool(CLIENTPOOL_SIZE);
 
-		printf("[SUCCESS]IOCP Initialization finished.\n");
 		return true;
 	}
 
 	void IOCPStart() {
-		//Accept 스레드 시작
-		accepterThread = thread([this]() { AccepterThread(); });
-		isAccepterRun = true;
+		//Send 스레드 시작
+		isSenderRun = true;
+		senderThread = thread([&]() { SenderThread(); });
 
 		//Receive 스레드 시작
+		isWorkerRun = true;
 		for (int i = 0; i < THREADPOOL_SIZE; i++) {
 			workerThreadPool.emplace_back([this]() { WorkerThread(); });
 		}
-		isWorkerRun = true;
 
-		printf("[SUCCESS]IOCP started.\n");
+		//Accept 스레드 시작
+		isAccepterRun = true;
+		accepterThread = thread([this]() { AccepterThread(); });
 	}
 
 	void IOCPEnd() {
@@ -104,6 +107,12 @@ public:
 		if (accepterThread.joinable()) {
 			accepterThread.join();
 		}
+
+		isSenderRun = false;
+		if (senderThread.joinable()) {
+			senderThread.join();
+		}
+
 	}
 
 	void SendData(UINT32 clientIndex, char* data, UINT16 size) {
@@ -168,6 +177,7 @@ private:
 			}
 			else if (wsaOverlappedEx->operation == IOOperation::SEND) {
 				OnSend(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.len);
+				client->SendCompleted();
 			}
 			else {
 				printf("[EXCEPTION]client index: %d\n", wsaOverlappedEx->clientIndex);
@@ -175,4 +185,9 @@ private:
 		}
 	}
 
+	void SenderThread() {
+		while (isSenderRun) {
+		
+		}
+	}
 };

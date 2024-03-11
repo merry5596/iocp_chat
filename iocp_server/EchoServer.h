@@ -18,12 +18,15 @@ public:
 	void Start() {
 		packetManager->Start();
 		IOCPStart();
+		cout << "Echo Server Start!" << endl;
 	}
 
 	void End() {
 		packetManager->End();
 		IOCPEnd();
+		cout << "Echo Server End..." << endl;
 	}
+
 	virtual void OnConnect(UINT32 clientIndex) {
 		printf("[ACCEPT]client index: %d\n", clientIndex);
 	}

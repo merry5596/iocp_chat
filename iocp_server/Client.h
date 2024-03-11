@@ -25,6 +25,8 @@ private:
 
 	char sendBuffer[BUFFER_SIZE];
 	WSAOverlappedEx sendOverlappedEx;
+
+	bool isSending;
 	
 	mutex mtx;
 //	UINT32 latestClosedTime = 0;
@@ -33,6 +35,7 @@ public:
 	Client(UINT32 index) {
 		this->index = index;
 		status = CONNECTION_STATUS::READY;
+		isSending = false;
 	}
 	UINT8 GetStatus() const {
 		return status;
@@ -79,7 +82,7 @@ public:
 		return true;
 	}
 
-	bool PostReceive() {	//멀티 스레드 접근 가능함. 두번의 recv가 같이 올수도있으니까.  
+	bool PostReceive() {	//멀티 스레드 접근 가능
 		DWORD bufCnt = 1;	//버퍼 개수. 일반적으로 1개로 설정
 		DWORD bytes = 0;
 		DWORD flags = 0;
@@ -103,6 +106,8 @@ public:
 	}
 
 	bool SendData(char* data, UINT16 size) {
+		while (isSending);	//보내는중이면 대기해
+		isSending = true;
 		ZeroMemory(sendBuffer, BUFFER_SIZE);
 		CopyMemory(sendBuffer, data, size);
 		ZeroMemory(&sendOverlappedEx, sizeof(WSAOverlappedEx));
@@ -120,6 +125,10 @@ public:
 		}
 
 		return true;
+	}
+
+	void SendCompleted() {
+		isSending = false;
 	}
 
 	void CloseSocket(bool isForce = false) {
