@@ -1,9 +1,7 @@
-#include "ClientNetwork.h"
+#include "ChatManager.h"
 
 const UINT16 SERVER_PORT = 11021;
 const char* SERVER_IP = "127.0.0.1";
-
-bool isRecvRun;
 
 int main(void) {
 	cout << "접속 하시겠습니까? (y/n)" << endl;
@@ -14,22 +12,21 @@ int main(void) {
 	}
 	cin.ignore();
 
-	ClientNetwork network;
-	network.Init(SERVER_PORT, SERVER_IP);
-	network.Start();	//Recv 시작
+	ChatManager chatManager;
+	chatManager.Init(SERVER_PORT, SERVER_IP);
+	chatManager.Start();
 
 	string msg;
-	cout << "메시지를 입력하세요(종료는 exit): ";
+	cout << "채팅 시작(종료는 exit)" << endl;
 	while (1) {
 		getline(cin, msg);
 		if (msg == "exit") {
-			isRecvRun = false;
 			break;
 		}
-		network.Send(msg);
+		chatManager.SendMsg(msg);
 		Sleep(3);
 	}
-	network.End();
+	chatManager.End();
 	cout << "프로그램 종료." << endl;
 	return 0;
 }

@@ -7,5 +7,6 @@
     <ClInclude Include="Packet.h" />
     <ClInclude Include="ClientNetwork.h" />
     <ClInclude Include="Define.h" />
+    <ClInclude Include="ChatManager.h" />
   </ItemGroup>
 </Project>

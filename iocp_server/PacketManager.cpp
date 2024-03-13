@@ -68,6 +68,5 @@ UINT32  PacketManager::DequeueClient() {
 void PacketManager::ProcessPacket(PacketInfo pktInfo) {
 	//현재는 에코만 구현
 	auto echoPkt = reinterpret_cast<EchoPacket*>(pktInfo.packetData);
-	printf("[ECHO]packet id: %d, packet size: %d, msg: %s\n", echoPkt->packetID, echoPkt->packetSize, echoPkt->msg);
 	SendData(pktInfo.clientIndex, (char*)echoPkt, echoPkt->packetSize);
 }

@@ -54,17 +54,12 @@ public:
 		recvThread = thread([&]() { RecvThread(); });
 	}
 
-	void Send(string msg) {
-		EchoPacket echoPkt;
-		echoPkt.packetID = (UINT16)PACKET_ID::ECHO_REQUEST;
-		echoPkt.packetSize = sizeof(EchoPacket);
-		CopyMemory(echoPkt.msg, msg.c_str(), sizeof(msg));
-		
-		int ret = send(sock, (char*) &echoPkt, sizeof(EchoPacket), 0);
+	void Send(MessagePacket msgPkt) {
+		int ret = send(sock, (char*) &msgPkt, sizeof(MessagePacket), 0);
 		if (ret == -1) {
 			printf("[FAILED]전송에 실패했습니다.\n");
 		}
-		printf("전송완료\n");
+		printf("---------------전송됨---------------\n");
 	}
 
 	void End() {
@@ -89,9 +84,9 @@ public:
 				cout << "수신 실패." << endl;
 				continue;
 			}
-			EchoPacket* echoPkt = reinterpret_cast<EchoPacket*>(buf);
+			MessagePacket* msgPkt = reinterpret_cast<MessagePacket*>(buf);
 
-			cout << "Server response: " <<echoPkt->msg << endl;
+			cout << "Server response: " <<msgPkt->msg << endl;
 		}
 	}
 };

@@ -134,6 +134,7 @@
     <ClInclude Include="ClientNetwork.h" />
     <ClInclude Include="Define.h" />
     <ClInclude Include="Packet.h" />
+    <ClInclude Include="ChatManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

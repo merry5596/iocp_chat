@@ -14,7 +14,7 @@ struct PACKET_HEADER {
 };
 const UINT16 HEADER_SIZE = sizeof(PACKET_HEADER);
 
-struct EchoPacket : PACKET_HEADER {
+struct MessagePacket : PACKET_HEADER {
 	char msg[BUFFER_SIZE - HEADER_SIZE];
 };
 #pragma pack(pop)
