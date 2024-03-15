@@ -2,6 +2,7 @@
 #include "Define.h"
 
 #include <thread>
+#include <errno.h>
 
 class ClientNetwork {
 private:
@@ -51,17 +52,6 @@ public:
 		recvThread = thread([&]() { RecvThread(); });
 	}
 
-	bool SendData(char* data, UINT16 size) {
-		int ret = send(sock, data, size, 0);
-		if (ret == -1) {
-			printf("[FAILED]전송에 실패했습니다.\n");
-			return false;
-		}
-
-		printf("[SEND] size: %d\n", size);
-		return true;
-	}
-
 	void End() {
 		isRecvRun = false;
 		closesocket(sock);
@@ -70,6 +60,16 @@ public:
 		}
 	}
 
+	bool SendData(char* data, UINT16 size) {
+		int ret = send(sock, data, size, 0);
+		if (ret == -1) {
+			printf("[FAILED]전송에 실패했습니다.\n");
+			return false;
+		}
+
+		//printf("[SEND] size: %d\n", size);
+		return true;
+	}
 
 	void RecvThread() {
 		isRecvRun = true;
@@ -77,19 +77,12 @@ public:
 		while (isRecvRun) {
 			ZeroMemory(buf, BUFFER_SIZE);
 			int recvBytes = recv(sock, buf, BUFFER_SIZE, 0);
-			if (recvBytes == -1) {
-				if (isRecvRun == false) {
-					break;
-				}
-				cout << "수신 실패." << endl;
-				continue;
+			if (recvBytes <= 0 || errno == ECONNRESET || errno == ENOTCONN) {
+				isRecvRun = false;
+				cout << "서버 연결 중단" << endl;
+				break;
 			}
 			OnReceive(buf, recvBytes);
-			/*
-			EchoPacket* echoPkt = reinterpret_cast<EchoPacket*>(buf);
-
-			cout << "Server response: " <<echoPkt->msg << endl;
-			*/
 		}
 	}
 

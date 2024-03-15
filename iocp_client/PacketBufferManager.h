@@ -31,6 +31,7 @@ public:
 			PacketThread();
 		});
 	}
+
 	void End() {
 		isPacketRun = false;
 		if (packetThread.joinable()) {
@@ -38,6 +39,22 @@ public:
 		}
 	}
 
+	void OnDataReceive(char* data, UINT16 size) {
+		SetPacket(data, size);	//버퍼에 데이터를 넣는다.
+	}
+
+	UINT16 GetLoginResponse() {	//ChatManager::Login() 에서 호출
+		while (true) {
+			if (loginResPkt != nullptr) {
+				auto result = loginResPkt->result;
+				loginResPkt = nullptr;
+				return result;
+			}
+			this_thread::sleep_for(chrono::milliseconds(1));
+		}
+	}
+
+private:
 	void PacketThread() {
 		while (isPacketRun) {
 			auto pkt = GetPacket();
@@ -50,11 +67,6 @@ public:
 		}
 	}
 
-	void OnDataReceive(char* data, UINT16 size) {
-		//버퍼에 데이터를 넣는다.
-		SetPacket(data, size);
-	}
-
 	void SetPacket(char* data, UINT16 size) {
 		if (writePos + size >= PACKET_BUFFER_SIZE) {	//이 쓰기로 버퍼가 넘친다면 우선 안읽은 데이터를 버퍼 앞으로 복사하고 이어서 쓰기
 			auto noReadDataSize = writePos - readPos;
@@ -64,7 +76,7 @@ public:
 		}
 		CopyMemory(&packetBuffer[writePos], data, size);
 		writePos += size;
-		printf("쓰기완료. writePos: %d, readPos: %d", writePos, readPos);
+		//printf("쓰기완료. writePos: %d, readPos: %d", writePos, readPos);
 	}
 
 	ResponsePacket* GetPacket() {
@@ -75,7 +87,7 @@ public:
 			return nullptr;
 		}
 		header = (PACKET_HEADER*)&packetBuffer[readPos];
-		if (header->packetID < 12) {
+		if (header->packetID < (UINT16)PACKET_ID::ECHO) {
 			cout << "[ERROR]유효하지 않은 응답 패킷" << endl;
 			return nullptr;
 		}
@@ -84,28 +96,24 @@ public:
 			//printf("body 덜옴. 와야할 패킷사이즈는 %d 인데, 읽고자 하는 버퍼 사이즈는 %d\n", header->packetSize, noReadDataSize);
 			return nullptr;
 		}
+		if (header->packetID == (UINT16)PACKET_ID::ECHO) {
+			EchoPacket* echoPkt = (EchoPacket*)&packetBuffer[readPos];;
+			printf("Server: %s\n", echoPkt->msg);
+			readPos += sizeof(EchoPacket);
+			return nullptr;
+		}
 
 		ResponsePacket* resPkt = (ResponsePacket*)&packetBuffer[readPos];
 		readPos += sizeof(ResponsePacket);
 
-		printf("읽기완료. writePos: %d, readPos: %d\n", writePos, readPos);
+		//printf("읽기완료. writePos: %d, readPos: %d\n", writePos, readPos);
 		return resPkt;
 	}
 
 	void ProcessPacket(ResponsePacket* pkt) {
-		if (pkt->packetID == 22) {	//로그인 응답
+		if (pkt->packetID == (UINT16)PACKET_ID::LOGIN_RESPONSE) {	//로그인 응답
 			loginResPkt = pkt;
 		}
 	}
 
-	UINT16 GetLoginResponse() {
-		while (true) {
-			if (loginResPkt != nullptr) {
-				auto result = loginResPkt->result;
-				loginResPkt = nullptr;
-				return result;
-			}
-			this_thread::sleep_for(chrono::milliseconds(1));
-		}
-	}
 };

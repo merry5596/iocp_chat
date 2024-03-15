@@ -10,11 +10,12 @@ private:
 	unique_ptr<PacketBufferManager> packetBufferManager;
 	bool loginRequestCompleted;
 	UserInfo userInfo;
+
 public:
-	void Init(UINT16 SERVER_PORT, const char* SERVER_IP) {
+	bool Init(UINT16 SERVER_PORT, const char* SERVER_IP) {
 		packetBufferManager = make_unique<PacketBufferManager>();
 		packetBufferManager->Init();
-		ClientNetwork::Init(SERVER_PORT, SERVER_IP);
+		return ClientNetwork::Init(SERVER_PORT, SERVER_IP);
 	}
 
 	void Start() {
@@ -28,7 +29,7 @@ public:
 	}
 
 	void OnReceive(char* data, UINT16 size) {
-		printf("[RECV] size: %d\n", size);
+		//printf("[RECV] size: %d\n", size);
 		packetBufferManager->OnDataReceive(data, size);
 	}
 
@@ -57,7 +58,7 @@ public:
 
 	bool EchoMsg(string msg) {
 		EchoPacket echoPkt;
-		echoPkt.packetID = (UINT16)PACKET_ID::ECHO_REQUEST;
+		echoPkt.packetID = (UINT16)PACKET_ID::ECHO;
 		echoPkt.packetSize = sizeof(EchoPacket);
 		CopyMemory(echoPkt.msg, msg.c_str(), sizeof(msg));
 		return SendData((char*)&echoPkt, sizeof(EchoPacket));
