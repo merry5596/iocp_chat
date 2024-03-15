@@ -43,7 +43,7 @@ public:
 			}
 
 			pktInfo.packetData = &packetBuffer[readPos];
-			readPos += noReadDataSize;
+			readPos += header->packetSize;
 		}
 		pktInfo.clientIndex = clientIndex;
 		pktInfo.packetID = header->packetID;
