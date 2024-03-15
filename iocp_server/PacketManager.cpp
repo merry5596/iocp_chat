@@ -12,7 +12,7 @@ void PacketManager::Init(const UINT16 CLIENTPOOL_SIZE) {
 	userManager->Init(CLIENTPOOL_SIZE);
 
 	processFuncDic = unordered_map<UINT16, ProcessFunction>();
-	processFuncDic[(UINT16)PACKET_ID::ECHO_REQUEST] = &PacketManager::ProcessEchoRequest;
+	processFuncDic[(UINT16)PACKET_ID::ECHO] = &PacketManager::ProcessEchoRequest;
 	processFuncDic[(UINT16)PACKET_ID::LOGIN_REQUEST] = &PacketManager::ProcessLoginRequest;
 	processFuncDic[(UINT16)PACKET_ID::CHAT_REQUEST] = &PacketManager::ProcessChatRequest;
 }
@@ -39,7 +39,7 @@ void PacketManager::PacketThread() {
 			if (pktInfo.packetID == (UINT16)PACKET_ID::DISCONNECT) {	//DISCONNECT
 				userManager->DeleteUser(clientIndex);
 			}
-			if (pktInfo.packetID != 0) {
+			else if (pktInfo.packetID != 0) {
 				ProcessPacket(pktInfo);
 				isIdle = false;
 			}
@@ -74,7 +74,7 @@ UINT32  PacketManager::DequeueClient() {
 }
 
 void PacketManager::ProcessPacket(PacketInfo pktInfo) {
-	printf("pktInfo.packetID: %d", pktInfo.packetID);
+	//printf("pktInfo.packetID: %d", pktInfo.packetID);
 	auto iter = processFuncDic.find(pktInfo.packetID);
 	if (iter != processFuncDic.end())
 	{
@@ -83,16 +83,13 @@ void PacketManager::ProcessPacket(PacketInfo pktInfo) {
 }
 
 void PacketManager::ProcessEchoRequest(UINT16 clientIndex, char* data, UINT16 size) {
-	printf("[ECHO]\n");
-
 	auto echoPkt = reinterpret_cast<EchoPacket*>(data);
+	cout <<"[ECHO]" << endl;
 	SendData(clientIndex, (char*)echoPkt, size);
 }
 
 
 void PacketManager::ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 size) {
-	printf("[LOGINREQUEST]\n");
-
 	auto reqPkt = reinterpret_cast<LoginRequestPacket*>(data);
 
 	ResponsePacket resPkt;
@@ -105,8 +102,11 @@ void PacketManager::ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 s
 	else {	//문제없음
 		resPkt.result = 0;	//error 코드 추후에 작성
 	}
+
+	cout << "[LOGINREQUEST]" << endl;
 	SendData(clientIndex, (char*)&resPkt, sizeof(ResponsePacket));
 }
 
 void PacketManager::ProcessChatRequest(UINT16 clientIndex, char* data, UINT16 size) {
+
 }

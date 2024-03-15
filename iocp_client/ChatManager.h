@@ -1,15 +1,16 @@
 #pragma once
 #include "Define.h"
+#include "ErrorCode.h"
 #include "Packet.h"
 #include "PacketBufferManager.h"
 #include "ClientNetwork.h"
 #include "UserInfo.h"
 
+//채팅 앱의 기능 관련 컨트롤러
 class ChatManager : public ClientNetwork {
 private:
-	unique_ptr<PacketBufferManager> packetBufferManager;
-	bool loginRequestCompleted;
 	UserInfo userInfo;
+	unique_ptr<PacketBufferManager> packetBufferManager;
 
 public:
 	bool Init(UINT16 SERVER_PORT, const char* SERVER_IP) {
@@ -38,21 +39,19 @@ public:
 		loginPkt.packetID = (UINT16)PACKET_ID::LOGIN_REQUEST;
 		loginPkt.packetSize = sizeof(LoginRequestPacket);
 		strcpy_s(loginPkt.name, NAME_LEN, name);
-		bool ret = SendData((char*)&loginPkt, sizeof(LoginRequestPacket));
-		if (ret == false) {
-			cout << "로그인 요청 실패" << endl;
+		if (SendData((char*)&loginPkt, sizeof(LoginRequestPacket)) == false) {
 			return false;
 		}
 	
 		auto result = packetBufferManager->GetLoginResponse();	//Login Response가 오면 그 결과를 반환한다.
-		if (result == 1) {	//TODO error code 클래스
+		if (result == ERROR_CODE::ALREADY_EXIST_NAME) {	//TODO error code 클래스
 			cout << "이미 존재하는 닉네임입니다." << endl;
 			return false;
 		}
 
-		userInfo.SetName(name);
-		//	userInfo.SetStatus(LOGIN);
+		userInfo.Login(name);
 		cout << "로그인 성공" << endl;
+
 		return true;
 	}
 

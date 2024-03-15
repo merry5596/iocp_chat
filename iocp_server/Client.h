@@ -48,6 +48,7 @@ public:
 	bool PostAccept(SOCKET listenSocket) {	//AccepterThread에서 접근(단일스레드)
 		acceptSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 		if (acceptSocket == INVALID_SOCKET) {
+			
 			printf("[ERROR]WSASocket() error: %d\n", WSAGetLastError());
 			return false;
 		}

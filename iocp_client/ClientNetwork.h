@@ -9,6 +9,7 @@ private:
 	SOCKET sock;
 	thread recvThread;
 	bool isRecvRun;
+
 public:
 	ClientNetwork() {}
 	~ClientNetwork() {
@@ -62,8 +63,8 @@ public:
 
 	bool SendData(char* data, UINT16 size) {
 		int ret = send(sock, data, size, 0);
-		if (ret == -1) {
-			printf("[FAILED]전송에 실패했습니다.\n");
+		if (ret <= 0) {
+			cout <<"[ERROR]send() failed" << endl;
 			return false;
 		}
 

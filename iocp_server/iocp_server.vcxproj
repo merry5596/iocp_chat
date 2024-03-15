@@ -104,6 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\iocp\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,6 +131,7 @@
     <ClInclude Include="Client.h" />
     <ClInclude Include="Define.h" />
     <ClInclude Include="EchoServer.h" />
+    <ClInclude Include="ErrorCode.h" />
     <ClInclude Include="IOCPServer.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="PacketManager.h" />

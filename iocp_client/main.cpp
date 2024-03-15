@@ -8,9 +8,9 @@ int main(void) {
 	bool ret = chatManager.Init(SERVER_PORT, SERVER_IP);
 	while (ret == false) {
 		cout << "서버에 접속할 수 없습니다. 재시도하시겠습니까?(y/n)" << endl;
-		char a;
-		cin >> a;
-		if (a == 'n') {
+		char answer;
+		cin >> answer;
+		if (answer == 'n') {
 			return 0;
 		}
 		cin.ignore();
@@ -26,20 +26,18 @@ int main(void) {
 		ret = chatManager.Login(name);
 	} while (ret == false);
 
-	cin.ignore();
 
 	string msg;
 	cout << "채팅 시작(종료는 exit)" << endl;
-	while (true) {
-		getline(cin, msg);
-		if (msg == "exit") {
-			break;
-		}
+
+	cin.ignore();	//버퍼 비우기
+	getline(cin, msg);
+	while (msg != "exit") {
 		bool ret = chatManager.EchoMsg(msg);
 		if (ret) {
-			cout << "---------------전송됨---------------" << endl;
+			cout << "---------------전송---------------" << endl;
 		}
-		Sleep(3);
+		getline(cin, msg);
 	}
 
 	chatManager.End();

@@ -105,6 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\iocp\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,9 +134,10 @@
     <ClCompile Include="UserInfo.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\iocp_server\ErrorCode.h" />
+    <ClInclude Include="..\iocp_server\Packet.h" />
     <ClInclude Include="ClientNetwork.h" />
     <ClInclude Include="Define.h" />
-    <ClInclude Include="Packet.h" />
     <ClInclude Include="ChatManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
