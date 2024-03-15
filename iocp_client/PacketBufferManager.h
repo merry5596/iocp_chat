@@ -99,12 +99,13 @@ public:
 	}
 
 	UINT16 GetLoginResponse() {
-		while (loginResPkt == nullptr) {
+		while (true) {
+			if (loginResPkt != nullptr) {
+				auto result = loginResPkt->result;
+				loginResPkt = nullptr;
+				return result;
+			}
 			this_thread::sleep_for(chrono::milliseconds(1));
 		}
-		auto result = loginResPkt->result;
-		loginResPkt = nullptr;
-		return result;
 	}
-
 };

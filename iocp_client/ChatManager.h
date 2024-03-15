@@ -28,7 +28,7 @@ public:
 	}
 
 	void OnReceive(char* data, UINT16 size) {
-		printf("[RECV] size: %d", size);
+		printf("[RECV] size: %d\n", size);
 		packetBufferManager->OnDataReceive(data, size);
 	}
 
@@ -39,19 +39,19 @@ public:
 		strcpy_s(loginPkt.name, NAME_LEN, name);
 		bool ret = SendData((char*)&loginPkt, sizeof(LoginRequestPacket));
 		if (ret == false) {
-			cout << "로그인 요청 실패\n" << endl;
+			cout << "로그인 요청 실패" << endl;
 			return false;
 		}
 	
 		auto result = packetBufferManager->GetLoginResponse();	//Login Response가 오면 그 결과를 반환한다.
-		if (result != 0) {	//TODO error code 클래스
-			cout << "로그인 실패. 에러코드: " << result << endl;
+		if (result == 1) {	//TODO error code 클래스
+			cout << "이미 존재하는 닉네임입니다." << endl;
 			return false;
 		}
 
 		userInfo.SetName(name);
 		//	userInfo.SetStatus(LOGIN);
-		cout << "로그인 성공." << endl;
+		cout << "로그인 성공" << endl;
 		return true;
 	}
 

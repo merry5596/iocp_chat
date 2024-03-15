@@ -17,29 +17,30 @@ int main(void) {
 	chatManager.Start();
 
 	char name[NAME_LEN];
-	cout << "채팅에 사용할 이름: ";
-	cin >> name;
-	bool ret = chatManager.Login(name);
-	if (ret == false) {
-		return 0;
-	}
-	cin.ignore();
+	bool ret;
+	do {
+		cout << "채팅에 사용할 이름: ";
+		cin >> name;
+		ret = chatManager.Login(name);
+	} while (ret == false);
 
-	string msg;
-	cout << "채팅 시작(종료는 exit)" << endl;
-	
-	while (1) {
-		getline(cin, msg);
-		if (msg == "exit") {
-			break;
+	cin.ignore();
+	if (ret == true) {
+		string msg;
+		cout << "채팅 시작(종료는 exit)" << endl;
+
+		while (1) {
+			getline(cin, msg);
+			if (msg == "exit") {
+				break;
+			}
+			bool ret = chatManager.EchoMsg(msg);
+			if (ret) {
+				cout << "---------------전송됨---------------" << endl;
+			}
+			Sleep(3);
 		}
-		bool ret = chatManager.EchoMsg(msg);
-		if (ret) {
-			cout << "---------------전송됨---------------" << endl;
-		}
-		Sleep(3);
 	}
-	
 	chatManager.End();
 	cout << "프로그램 종료." << endl;
 	return 0;

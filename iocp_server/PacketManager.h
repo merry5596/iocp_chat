@@ -37,6 +37,8 @@ private:
 	void EnqueueClient(UINT32 clientIndex);
 	UINT32 DequeueClient();
 	void ProcessPacket(PacketInfo pktInfo);
+	void ProcessConnect(UINT32 clientIndex);
+	void ProcessDisconnect(UINT32 clientIndex);
 	void ProcessEchoRequest(UINT16 clientIndex, char* data, UINT16 size);
 	void ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 size);
 	void ProcessChatRequest(UINT16 clientIndex, char* data, UINT16 size);

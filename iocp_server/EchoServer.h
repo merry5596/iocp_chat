@@ -6,7 +6,7 @@
 
 class EchoServer : public IOCPServer {
 private:
-	unique_ptr<PacketManager> packetManager;	
+	unique_ptr<PacketManager> packetManager;
 public:
 	void Init(const UINT16 SERVER_PORT, const UINT16 CLIENTPOOL_SIZE) {
 		packetManager = std::make_unique<PacketManager>();
@@ -42,5 +42,9 @@ public:
 
 	virtual void OnDisconnect(UINT32 clientIndex) {
 		printf("[CLOSE]client index:%d\n", clientIndex);
+		SystemPacket pkt;
+		pkt.packetID = (UINT16)PACKET_ID::DISCONNECT;
+		pkt.packetSize = sizeof(SystemPacket);
+		packetManager->OnDataReceive(clientIndex, (char*)&pkt, sizeof(SystemPacket));
 	}
 };

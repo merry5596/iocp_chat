@@ -58,7 +58,7 @@ public:
 			return false;
 		}
 
-		printf("[SEND] size: %d", size);
+		printf("[SEND] size: %d\n", size);
 		return true;
 	}
 

@@ -36,6 +36,9 @@ void PacketManager::PacketThread() {
 		UINT32 clientIndex = DequeueClient();
 		if (clientIndex != -1) {
 			PacketInfo pktInfo = userManager->GetPacket(clientIndex);
+			if (pktInfo.packetID == (UINT16)PACKET_ID::DISCONNECT) {	//DISCONNECT
+				userManager->DeleteUser(clientIndex);
+			}
 			if (pktInfo.packetID != 0) {
 				ProcessPacket(pktInfo);
 				isIdle = false;
@@ -91,12 +94,17 @@ void PacketManager::ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 s
 	printf("[LOGINREQUEST]\n");
 
 	auto reqPkt = reinterpret_cast<LoginRequestPacket*>(data);
-	//TODO
-	// if (reqPkt->name이 중복이 아니면)
+
 	ResponsePacket resPkt;
 	resPkt.packetID = (UINT16)PACKET_ID::LOGIN_RESPONSE;
 	resPkt.packetSize = sizeof(ResponsePacket);
-	resPkt.result = 0;	//error 코드 추후에 작성
+	//닉네임 중복 검사
+	if (!userManager->AddUser(reqPkt->name, clientIndex)) {	//add 실패
+		resPkt.result = 1;	//error 코드 추후 작성
+	}
+	else {	//문제없음
+		resPkt.result = 0;	//error 코드 추후에 작성
+	}
 	SendData(clientIndex, (char*)&resPkt, sizeof(ResponsePacket));
 }
 

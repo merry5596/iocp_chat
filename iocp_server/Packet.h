@@ -8,6 +8,8 @@ const UINT16 NAME_LEN = 10;
 enum class PACKET_ID : UINT16 {
 	ECHO_REQUEST = 1,
 
+	DISCONNECT = 10,
+
 	LOGIN_REQUEST = 11,
 	CHAT_REQUEST = 12,
 
@@ -29,6 +31,10 @@ struct PACKET_HEADER {
 	UINT16 packetSize;
 };
 const UINT16 HEADER_SIZE = sizeof(PACKET_HEADER);
+
+struct SystemPacket : PACKET_HEADER {
+
+};
 
 struct ResponsePacket : PACKET_HEADER {
 	UINT16 result;
