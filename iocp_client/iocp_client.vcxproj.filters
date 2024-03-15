@@ -2,10 +2,13 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PacketBufferManager.h" />
+    <ClCompile Include="UserInfo.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Packet.h" />
     <ClInclude Include="ClientNetwork.h" />
     <ClInclude Include="Define.h" />
+    <ClInclude Include="ChatManager.h" />
   </ItemGroup>
 </Project>

@@ -1,14 +1,21 @@
 #pragma once
 #include "Define.h"
 #include "Packet.h"
-
 #include <mutex>
 
 const UINT16 PACKET_BUFFER_SIZE = 8096;
 
+enum class USER_STATUS : UINT16 {
+	NONE = 0,
+	LOGIN = 1,
+};
+
 class User {
 private:
 	UINT32 clientIndex;
+	char name[NAME_LEN];
+	UINT16 status;
+
 	char packetBuffer[PACKET_BUFFER_SIZE];
 	UINT16 writePos;
 	UINT16 readPos;
@@ -16,12 +23,28 @@ private:
 public:
 	User(UINT32 index) : clientIndex(index), writePos(0), readPos(0) {}
 	~User() {}
+	
+	void SetLogin(char* name) {
+		strcpy_s(this->name, NAME_LEN, name);
+		status = (UINT16)USER_STATUS::LOGIN;
+	}
+
+	void SetLogout() {
+		ZeroMemory(name, NAME_LEN);
+		status = (UINT16)USER_STATUS::NONE;
+	}
+
+	char* GetName() {
+		return name;
+	}
+
 	void SetPacket(char* data, UINT16 size) {
 		lock_guard<mutex> lock(mtx);
 		if (writePos + size >= PACKET_BUFFER_SIZE) {	//이 쓰기로 버퍼가 넘친다면 우선 안읽은 데이터를 버퍼 앞으로 복사하고 이어서 쓰기
 			auto noReadDataSize = writePos - readPos;
 			CopyMemory(&packetBuffer[0], &packetBuffer[readPos], noReadDataSize);
 			writePos = noReadDataSize;
+			readPos = 0;
 		}
 		CopyMemory(&packetBuffer[writePos], data, size);
 		writePos += size;
@@ -43,7 +66,7 @@ public:
 			}
 
 			pktInfo.packetData = &packetBuffer[readPos];
-			readPos += noReadDataSize;
+			readPos += header->packetSize;
 		}
 		pktInfo.clientIndex = clientIndex;
 		pktInfo.packetID = header->packetID;
