@@ -132,11 +132,11 @@ private:
 	}
 
 	void WorkerThread() {
-		DWORD bytes = 0;
+		DWORD recvBytes = 0;
 		Client* client = nullptr;
 		LPOVERLAPPED lpOverlapped = nullptr;
 		while (isWorkerRun) {
-			bool ret = GetQueuedCompletionStatus(IOCPHandle, &bytes, (PULONG_PTR)&client, &lpOverlapped, INFINITE);
+			bool ret = GetQueuedCompletionStatus(IOCPHandle, &recvBytes, (PULONG_PTR)&client, &lpOverlapped, INFINITE);
 
 			//IOCPHandle Close 되면 ret == false, lpOverlapped = NULL 반환
 			if (lpOverlapped == NULL) {
@@ -161,7 +161,7 @@ private:
 				}
 			}
 			else if (wsaOverlappedEx->operation == IOOperation::RECV) {
-				OnReceive(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.buf, wsaOverlappedEx->wsaBuf.len);
+				OnReceive(wsaOverlappedEx->clientIndex, wsaOverlappedEx->wsaBuf.buf, recvBytes);
 				client->PostReceive();
 			}
 			else if (wsaOverlappedEx->operation == IOOperation::SEND) {

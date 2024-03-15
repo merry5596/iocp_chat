@@ -1,7 +1,6 @@
 #pragma once
 #include "Define.h"
 #include "Packet.h"
-
 #include <mutex>
 
 const UINT16 PACKET_BUFFER_SIZE = 8096;
@@ -22,6 +21,7 @@ public:
 			auto noReadDataSize = writePos - readPos;
 			CopyMemory(&packetBuffer[0], &packetBuffer[readPos], noReadDataSize);
 			writePos = noReadDataSize;
+			readPos = 0;
 		}
 		CopyMemory(&packetBuffer[writePos], data, size);
 		writePos += size;

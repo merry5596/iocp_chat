@@ -129,6 +129,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PacketBufferManager.h" />
+    <ClCompile Include="UserInfo.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientNetwork.h" />

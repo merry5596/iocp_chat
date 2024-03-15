@@ -105,14 +105,13 @@ public:
 	}
 
 	void SendData(char* data, UINT16 size) {	//PacketThread가 접근
-		//코드변경: sendOverlappedEx 객체를 만들어서 sending큐에 담기
 		char* sendBuffer = new char[BUFFER_SIZE];
 		CopyMemory(sendBuffer, data, size);
 		WSAOverlappedEx* sendOverlappedEx = new WSAOverlappedEx;
 		ZeroMemory(sendOverlappedEx, sizeof(WSAOverlappedEx));
 		sendOverlappedEx->operation = IOOperation::SEND;
 		sendOverlappedEx->clientIndex = index;
-		sendOverlappedEx->wsaBuf.len = BUFFER_SIZE;
+		sendOverlappedEx->wsaBuf.len = size;
 		sendOverlappedEx->wsaBuf.buf = sendBuffer;
 
 		lock_guard<mutex> lock(sendMtx);

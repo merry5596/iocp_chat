@@ -1,10 +1,7 @@
 #pragma once
 #include "Define.h"
-#include "Packet.h"
 
 #include <thread>
-#include <iostream>
-using namespace std;
 
 class ClientNetwork {
 private:
@@ -54,12 +51,15 @@ public:
 		recvThread = thread([&]() { RecvThread(); });
 	}
 
-	void Send(MessagePacket msgPkt) {
-		int ret = send(sock, (char*) &msgPkt, sizeof(MessagePacket), 0);
+	bool SendData(char* data, UINT16 size) {
+		int ret = send(sock, data, size, 0);
 		if (ret == -1) {
 			printf("[FAILED]전송에 실패했습니다.\n");
+			return false;
 		}
-		printf("---------------전송됨---------------\n");
+
+		printf("[SEND] size: %d", size);
+		return true;
 	}
 
 	void End() {
@@ -76,17 +76,22 @@ public:
 		char buf[BUFFER_SIZE];
 		while (isRecvRun) {
 			ZeroMemory(buf, BUFFER_SIZE);
-			int ret = recv(sock, buf, sizeof(buf), 0);
-			if (ret == -1) {
+			int recvBytes = recv(sock, buf, BUFFER_SIZE, 0);
+			if (recvBytes == -1) {
 				if (isRecvRun == false) {
 					break;
 				}
 				cout << "수신 실패." << endl;
 				continue;
 			}
-			MessagePacket* msgPkt = reinterpret_cast<MessagePacket*>(buf);
+			OnReceive(buf, recvBytes);
+			/*
+			EchoPacket* echoPkt = reinterpret_cast<EchoPacket*>(buf);
 
-			cout << "Server response: " <<msgPkt->msg << endl;
+			cout << "Server response: " <<echoPkt->msg << endl;
+			*/
 		}
 	}
+
+	virtual void OnReceive(char* data, UINT16 size) {}
 };

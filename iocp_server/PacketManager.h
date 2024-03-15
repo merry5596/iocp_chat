@@ -1,13 +1,15 @@
 #pragma once
 
-#include "define.h"
-#include "packet.h"
+#include "Define.h"
+#include "Packet.h"
 #include "UserManager.h"
 
 #include <thread>
 #include <queue>
 #include <mutex>
 #include <functional>
+#include <unordered_map>
+
 
 class UserManager;
 class PacketManager {
@@ -18,6 +20,10 @@ private:
 	queue<UINT32> clientQueue;
 	mutex mtx;
 	UserManager* userManager;
+	
+	typedef void (PacketManager::*ProcessFunction)(UINT16, char*, UINT16);
+	unordered_map<UINT16, ProcessFunction> processFuncDic;
+
 public:
 	PacketManager();
 	~PacketManager();
@@ -31,5 +37,8 @@ private:
 	void EnqueueClient(UINT32 clientIndex);
 	UINT32 DequeueClient();
 	void ProcessPacket(PacketInfo pktInfo);
+	void ProcessEchoRequest(UINT16 clientIndex, char* data, UINT16 size);
+	void ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 size);
+	void ProcessChatRequest(UINT16 clientIndex, char* data, UINT16 size);
 };
 
