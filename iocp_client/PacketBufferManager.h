@@ -4,6 +4,7 @@
 #include "UserInfo.h"
 
 #include <thread>
+#include <mutex>
 
 const UINT16 PACKET_BUFFER_SIZE = 8096;
 
@@ -13,6 +14,7 @@ private:
 	char packetBuffer[PACKET_BUFFER_SIZE];
 	UINT16 writePos;
 	UINT16 readPos;
+	mutex mtx;
 
 	thread packetThread;
 	bool isPacketRun;
@@ -65,6 +67,7 @@ private:
 	}
 
 	void SetPacket(char* data, UINT16 size) {
+		lock_guard<mutex> lock(mtx);
 		if (writePos + size >= PACKET_BUFFER_SIZE) {	//이 쓰기로 버퍼가 넘친다면 우선 안읽은 데이터를 버퍼 앞으로 복사하고 이어서 쓰기
 			auto noReadDataSize = writePos - readPos;
 			CopyMemory(&packetBuffer[0], &packetBuffer[readPos], noReadDataSize);
@@ -78,38 +81,42 @@ private:
 
 	bool ProcessBuffer() {
 		PACKET_HEADER* header;
-		auto noReadDataSize = writePos - readPos;
-		if (noReadDataSize < HEADER_SIZE) {	//헤더조차 다 안 온 상태
-			//cout << "[ERROR]헤더안옴" << endl;
-			//return PacketInfo();
-			return false;
-		}
-		header = (PACKET_HEADER*)&packetBuffer[readPos];
-		if (header->packetID < (UINT16)PACKET_ID::ECHO) {
-			cout << "[ERROR]ProcessBuffer(): 응답 패킷이 아님.." << endl;
-			//return PacketInfo();
-			return false;
-		}
+		UINT16 pktStartPos;
 
-		if (noReadDataSize < header->packetSize) {	//전체 패킷 덜 옴
-			//printf("body 덜옴. 와야할 패킷사이즈는 %d 인데, 읽고자 하는 버퍼 사이즈는 %d\n", header->packetSize, noReadDataSize);
-			//return PacketInfo();
-			return false;
-		}
+		lock_guard<mutex> lock(mtx);
+		{
+			auto noReadDataSize = writePos - readPos;
+			if (noReadDataSize < HEADER_SIZE) {	//헤더조차 다 안 온 상태
+				//cout << "[ERROR]헤더안옴" << endl;
+				//return PacketInfo();
+				return false;
+			}
+			header = (PACKET_HEADER*)&packetBuffer[readPos];
+			if (header->packetID < (UINT16)PACKET_ID::ECHO) {
+				cout << "[ERROR]ProcessBuffer(): 응답 패킷이 아님.." << endl;
+				//return PacketInfo();
+				return false;
+			}
 
+			if (noReadDataSize < header->packetSize) {	//전체 패킷 덜 옴
+				//printf("body 덜옴. 와야할 패킷사이즈는 %d 인데, 읽고자 하는 버퍼 사이즈는 %d\n", header->packetSize, noReadDataSize);
+				//return PacketInfo();
+				return false;
+			}
+			pktStartPos = readPos;
+			readPos += header->packetSize;
+		}
+		
 		if (header->packetID == (UINT16)PACKET_ID::ECHO) {
-			EchoPacket* echoPkt = (EchoPacket*)&packetBuffer[readPos];
-			readPos += sizeof(EchoPacket);
+			EchoPacket* echoPkt = (EchoPacket*)&packetBuffer[pktStartPos];
 			ProcessEchoPacket(echoPkt);
 		}
 		else if (header->packetID == (UINT16)PACKET_ID::CHAT_NOTIFY) {
-			ChatPacket* chatPkt = (ChatPacket*)&packetBuffer[readPos];
-			readPos += sizeof(ChatPacket);
+			ChatPacket* chatPkt = (ChatPacket*)&packetBuffer[pktStartPos];
 			ProcessChatPacket(chatPkt);
 		}
 		else {
-			ResponsePacket* resPkt = (ResponsePacket*)&packetBuffer[readPos];
-			readPos += sizeof(ResponsePacket);
+			ResponsePacket* resPkt = (ResponsePacket*)&packetBuffer[pktStartPos];
 			ProcessResponsePacket(resPkt);
 		}
 
