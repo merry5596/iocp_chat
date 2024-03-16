@@ -70,6 +70,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -105,6 +108,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\iocp\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,9 +137,10 @@
     <ClCompile Include="UserInfo.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\common\ErrorCode.h" />
+    <ClInclude Include="..\common\Packet.h" />
     <ClInclude Include="ClientNetwork.h" />
     <ClInclude Include="Define.h" />
-    <ClInclude Include="Packet.h" />
     <ClInclude Include="ChatManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

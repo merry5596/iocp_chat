@@ -1,6 +1,7 @@
 
 #include "PacketManager.h"
 #include "UserManager.h"
+#include "../common/ErrorCode.h"
 
 PacketManager::PacketManager() {}
 PacketManager::~PacketManager() {
@@ -12,7 +13,7 @@ void PacketManager::Init(const UINT16 CLIENTPOOL_SIZE) {
 	userManager->Init(CLIENTPOOL_SIZE);
 
 	processFuncDic = unordered_map<UINT16, ProcessFunction>();
-	processFuncDic[(UINT16)PACKET_ID::ECHO_REQUEST] = &PacketManager::ProcessEchoRequest;
+	processFuncDic[(UINT16)PACKET_ID::ECHO] = &PacketManager::ProcessEchoRequest;
 	processFuncDic[(UINT16)PACKET_ID::LOGIN_REQUEST] = &PacketManager::ProcessLoginRequest;
 	processFuncDic[(UINT16)PACKET_ID::CHAT_REQUEST] = &PacketManager::ProcessChatRequest;
 }
@@ -39,7 +40,7 @@ void PacketManager::PacketThread() {
 			if (pktInfo.packetID == (UINT16)PACKET_ID::DISCONNECT) {	//DISCONNECT
 				userManager->DeleteUser(clientIndex);
 			}
-			if (pktInfo.packetID != 0) {
+			else if (pktInfo.packetID != 0) {
 				ProcessPacket(pktInfo);
 				isIdle = false;
 			}
@@ -74,7 +75,7 @@ UINT32  PacketManager::DequeueClient() {
 }
 
 void PacketManager::ProcessPacket(PacketInfo pktInfo) {
-	printf("pktInfo.packetID: %d", pktInfo.packetID);
+	//printf("pktInfo.packetID: %d", pktInfo.packetID);
 	auto iter = processFuncDic.find(pktInfo.packetID);
 	if (iter != processFuncDic.end())
 	{
@@ -83,16 +84,13 @@ void PacketManager::ProcessPacket(PacketInfo pktInfo) {
 }
 
 void PacketManager::ProcessEchoRequest(UINT16 clientIndex, char* data, UINT16 size) {
-	printf("[ECHO]\n");
-
 	auto echoPkt = reinterpret_cast<EchoPacket*>(data);
+	cout <<"[ECHO]" << endl;
 	SendData(clientIndex, (char*)echoPkt, size);
 }
 
 
 void PacketManager::ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 size) {
-	printf("[LOGINREQUEST]\n");
-
 	auto reqPkt = reinterpret_cast<LoginRequestPacket*>(data);
 
 	ResponsePacket resPkt;
@@ -105,8 +103,31 @@ void PacketManager::ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 s
 	else {	//문제없음
 		resPkt.result = 0;	//error 코드 추후에 작성
 	}
+
+	cout << "[LOGIN RES]" << endl;
 	SendData(clientIndex, (char*)&resPkt, sizeof(ResponsePacket));
 }
 
 void PacketManager::ProcessChatRequest(UINT16 clientIndex, char* data, UINT16 size) {
+	auto reqPkt = reinterpret_cast<ChatRequestPacket*>(data);
+
+	ChatNotifyPacket ntfPkt;
+	ntfPkt.packetID = (UINT16)PACKET_ID::CHAT_NOTIFY;
+	ntfPkt.packetSize = sizeof(ChatNotifyPacket);
+	CopyMemory(ntfPkt.sender, userManager->GetUser(clientIndex)->GetName(), NAME_LEN);
+	CopyMemory(ntfPkt.msg, reqPkt->msg, CHAT_MSG_LEN);
+	for (auto receiverIndex : userManager->GetAllUserIndex()) {
+		if (receiverIndex != clientIndex) {
+			cout << "[CHAT NTF]" << endl;
+			SendData(receiverIndex, (char*)&ntfPkt, sizeof(ChatNotifyPacket));
+		}
+	}
+
+	ResponsePacket resPkt;
+	resPkt.packetID = (UINT16)PACKET_ID::CHAT_RESPONSE;
+	resPkt.packetSize = sizeof(ResponsePacket);
+	resPkt.result = ERROR_CODE::NONE;
+
+	cout << "[CHAT RES]" << endl;
+	SendData(clientIndex, (char*)&resPkt, sizeof(ResponsePacket));
 }

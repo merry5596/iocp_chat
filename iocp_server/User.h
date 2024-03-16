@@ -5,7 +5,7 @@
 
 const UINT16 PACKET_BUFFER_SIZE = 8096;
 
-enum class USER_STATUS : UINT16 {
+enum class USER_STATE : UINT16 {
 	NONE = 0,
 	LOGIN = 1,
 };
@@ -14,7 +14,7 @@ class User {
 private:
 	UINT32 clientIndex;
 	char name[NAME_LEN];
-	UINT16 status;
+	UINT16 state;
 
 	char packetBuffer[PACKET_BUFFER_SIZE];
 	UINT16 writePos;
@@ -26,12 +26,12 @@ public:
 	
 	void SetLogin(char* name) {
 		strcpy_s(this->name, NAME_LEN, name);
-		status = (UINT16)USER_STATUS::LOGIN;
+		state = (UINT16)USER_STATE::LOGIN;
 	}
 
 	void SetLogout() {
 		ZeroMemory(name, NAME_LEN);
-		status = (UINT16)USER_STATUS::NONE;
+		state = (UINT16)USER_STATE::NONE;
 	}
 
 	char* GetName() {

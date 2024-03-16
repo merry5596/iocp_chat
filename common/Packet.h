@@ -4,17 +4,21 @@
 #include <vector>
 
 const UINT16 NAME_LEN = 10;
+const UINT16 ECHO_MSG_LEN = 252;
+const UINT16 CHAT_MSG_LEN = 242;
 
 enum class PACKET_ID : UINT16 {
-	ECHO_REQUEST = 1,
+	LOGIN_REQUEST = 1,
+	CHAT_REQUEST = 2,
 
-	DISCONNECT = 10,
+	ECHO = 20,
 
-	LOGIN_REQUEST = 11,
-	CHAT_REQUEST = 12,
+	LOGIN_RESPONSE = 21,
+	CHAT_RESPONSE = 22,
 
-	LOGIN_RESPONSE = 22,
-	CHAT_RESPONSE = 23,
+	CHAT_NOTIFY = 30,
+
+	DISCONNECT = 40,
 };
 
 //for server
@@ -45,6 +49,16 @@ struct LoginRequestPacket : PACKET_HEADER {
 };
 
 struct EchoPacket : PACKET_HEADER {
-	char msg[BUFFER_SIZE - HEADER_SIZE];
+	char msg[ECHO_MSG_LEN];
 };
+
+struct ChatRequestPacket : PACKET_HEADER {
+	char msg[CHAT_MSG_LEN];
+};
+
+struct ChatNotifyPacket : PACKET_HEADER {
+	char sender[NAME_LEN];
+	char msg[CHAT_MSG_LEN];
+};
+
 #pragma pack(pop)

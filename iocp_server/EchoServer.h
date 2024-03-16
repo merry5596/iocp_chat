@@ -18,13 +18,12 @@ public:
 	void Start() {
 		packetManager->Start();
 		IOCPStart();
-		cout << "Echo Server Start!" << endl;
 	}
 
 	void End() {
 		packetManager->End();
 		IOCPEnd();
-		cout << "Echo Server End..." << endl;
+		printf("Echo Server End...");
 	}
 
 	virtual void OnConnect(UINT32 clientIndex) {

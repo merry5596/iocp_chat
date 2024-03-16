@@ -4,6 +4,9 @@
     <Filter Include="ServerNetwork">
       <UniqueIdentifier>{fe0de79e-f7cd-4f29-9625-49c6baf3c91d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{e2fbe950-1d88-4405-ac38-528908e4583c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Define.h">
@@ -15,11 +18,16 @@
     <ClInclude Include="Client.h">
       <Filter>ServerNetwork</Filter>
     </ClInclude>
-    <ClInclude Include="Packet.h" />
     <ClInclude Include="EchoServer.h" />
     <ClInclude Include="UserManager.h" />
     <ClInclude Include="User.h" />
     <ClInclude Include="PacketManager.h" />
+    <ClInclude Include="..\common\ErrorCode.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Packet.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

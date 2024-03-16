@@ -10,6 +10,8 @@ int main(void) {
 	EchoServer server;
 	server.Init(SERVER_PORT, CLIENTPOOL_SIZE);
 	server.Start();
+
+	printf("Echo Server Start! ");
 	while (true) {
 		std::string key;
 		cout << "press \'exit\' to exit" << endl;

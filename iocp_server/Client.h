@@ -7,7 +7,7 @@
 #include <queue>
 #pragma comment (lib, "mswsock.lib")
 
-enum CONNECTION_STATUS {
+enum class CONNECTION_STATUS : UINT16 {
 	READY = 0,
 	WAITING_FOR_ACCEPT = 1,
 	CONNECTING = 2,
@@ -36,7 +36,7 @@ public:
 	Client();
 	Client(UINT32 index) {
 		this->index = index;
-		status = CONNECTION_STATUS::READY;
+		status = (UINT16)CONNECTION_STATUS::READY;
 		isSending = false;
 	}
 	UINT8 GetStatus() const {
@@ -48,6 +48,7 @@ public:
 	bool PostAccept(SOCKET listenSocket) {	//AccepterThread에서 접근(단일스레드)
 		acceptSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 		if (acceptSocket == INVALID_SOCKET) {
+			
 			printf("[ERROR]WSASocket() error: %d\n", WSAGetLastError());
 			return false;
 		}
@@ -64,7 +65,7 @@ public:
 			printf("[ERROR]AcceptEx() error: %d\n", WSAGetLastError());
 			return false;
 		}
-		status = CONNECTION_STATUS::WAITING_FOR_ACCEPT;
+		status = (UINT16)CONNECTION_STATUS::WAITING_FOR_ACCEPT;
 
 		return true;
 	}
@@ -99,7 +100,7 @@ public:
 			printf("[ERROR]WSARecv() error: %d\n", WSAGetLastError());
 			return false;
 		}
-		status = CONNECTION_STATUS::CONNECTING;
+		status = (UINT16)CONNECTION_STATUS::CONNECTING;
 
 		return true;
 	}
@@ -158,6 +159,6 @@ public:
 		setsockopt(acceptSocket, SOL_SOCKET, SO_LINGER, (const char*) & lingerOpt, sizeof(linger));
 		closesocket(acceptSocket);
 
-		status = CONNECTION_STATUS::READY;
+		status = (UINT16)CONNECTION_STATUS::READY;
 	}
 };

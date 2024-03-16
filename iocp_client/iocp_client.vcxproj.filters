@@ -6,9 +6,26 @@
     <ClCompile Include="UserInfo.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Packet.h" />
-    <ClInclude Include="ClientNetwork.h" />
-    <ClInclude Include="Define.h" />
     <ClInclude Include="ChatManager.h" />
+    <ClInclude Include="ClientNetwork.h">
+      <Filter>ClientNetwork</Filter>
+    </ClInclude>
+    <ClInclude Include="Define.h">
+      <Filter>ClientNetwork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\ErrorCode.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Packet.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ClientNetwork">
+      <UniqueIdentifier>{dfa4c5d3-00c5-4936-8e58-95f665f9d0c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{16f42033-6bbe-457b-9fc3-da37c2cdab63}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
