@@ -13,10 +13,10 @@
     <ClInclude Include="Define.h">
       <Filter>ClientNetwork</Filter>
     </ClInclude>
-    <ClInclude Include="..\iocp_server\ErrorCode.h">
+    <ClInclude Include="..\common\ErrorCode.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\iocp_server\Packet.h">
+    <ClInclude Include="..\common\Packet.h">
       <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>

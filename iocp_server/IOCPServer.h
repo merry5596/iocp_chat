@@ -123,7 +123,7 @@ private:
 	void AccepterThread() {
 		while (isAccepterRun) {
 			for (auto client : clientPool) {
-				if (client->GetStatus() == CONNECTION_STATUS::READY) {
+				if (client->GetStatus() == (UINT16)CONNECTION_STATUS::READY) {
 					client->PostAccept(listenSocket);
 				}
 			}

@@ -7,6 +7,8 @@
 
 class UserManager {
 private:
+	UINT32 maxUserCnt;
+	UINT32 curUserCnt;
 	vector<User*> userList;
 	unordered_map<string, UINT32> userDic;
 	mutex mtx;
@@ -21,6 +23,8 @@ public:
 		for (int i = 0; i < CLIENTPOOL_SIZE; i++) {
 			userList.push_back(new User(i));
 		}
+		maxUserCnt = CLIENTPOOL_SIZE;
+		curUserCnt = 0;
 	}
 
 	void SetPacket(UINT32 clientIndex, char* data, UINT16 size) {
@@ -41,6 +45,7 @@ public:
 		}
 		userList[clientIndex]->SetLogin(name);
 		userDic.insert(pair<char*, UINT32>(name, clientIndex));
+		curUserCnt++;
 
 		return true;
 	}
@@ -48,6 +53,15 @@ public:
 	void DeleteUser(UINT32 clientIndex) {
 		userDic.erase(userList[clientIndex]->GetName());
 		userList[clientIndex]->SetLogout();
+		curUserCnt--;
+	}
+
+	vector<UINT16> GetAllUserIndex() {
+		vector<UINT16> userIndexList;
+		for (auto &userPair : userDic) {
+			userIndexList.push_back(userPair.second);
+		}
+		return userIndexList;
 	}
 
 private:

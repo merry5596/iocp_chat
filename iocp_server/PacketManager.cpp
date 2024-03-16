@@ -1,6 +1,7 @@
 
 #include "PacketManager.h"
 #include "UserManager.h"
+#include "../common/ErrorCode.h"
 
 PacketManager::PacketManager() {}
 PacketManager::~PacketManager() {
@@ -103,10 +104,30 @@ void PacketManager::ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 s
 		resPkt.result = 0;	//error 코드 추후에 작성
 	}
 
-	cout << "[LOGINREQUEST]" << endl;
+	cout << "[LOGIN RES]" << endl;
 	SendData(clientIndex, (char*)&resPkt, sizeof(ResponsePacket));
 }
 
 void PacketManager::ProcessChatRequest(UINT16 clientIndex, char* data, UINT16 size) {
+	auto reqPkt = reinterpret_cast<ChatRequestPacket*>(data);
 
+	ChatNotifyPacket ntfPkt;
+	ntfPkt.packetID = (UINT16)PACKET_ID::CHAT_NOTIFY;
+	ntfPkt.packetSize = sizeof(ChatNotifyPacket);
+	CopyMemory(ntfPkt.sender, userManager->GetUser(clientIndex)->GetName(), NAME_LEN);
+	CopyMemory(ntfPkt.msg, reqPkt->msg, CHAT_MSG_LEN);
+	for (auto receiverIndex : userManager->GetAllUserIndex()) {
+		if (receiverIndex != clientIndex) {
+			cout << "[CHAT NTF]" << endl;
+			SendData(receiverIndex, (char*)&ntfPkt, sizeof(ChatNotifyPacket));
+		}
+	}
+
+	ResponsePacket resPkt;
+	resPkt.packetID = (UINT16)PACKET_ID::CHAT_RESPONSE;
+	resPkt.packetSize = sizeof(ResponsePacket);
+	resPkt.result = ERROR_CODE::NONE;
+
+	cout << "[CHAT RES]" << endl;
+	SendData(clientIndex, (char*)&resPkt, sizeof(ResponsePacket));
 }

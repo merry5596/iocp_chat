@@ -18,7 +18,6 @@ public:
 	void Start() {
 		packetManager->Start();
 		IOCPStart();
-		printf("Echo Server Start!");
 	}
 
 	void End() {

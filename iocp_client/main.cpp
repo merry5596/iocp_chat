@@ -5,10 +5,18 @@ const char* SERVER_IP = "127.0.0.1";
 
 int main(void) {
 	ChatManager chatManager;
+
+	cout << "채팅 프로그램에 참여하시겠습니까? (y/n)" << endl;
+	char answer;
+	cin >> answer;
+	if (answer == 'n') {
+		return 0;
+	}
+	cin.ignore();
+
 	bool ret = chatManager.Init(SERVER_PORT, SERVER_IP);
 	while (ret == false) {
 		cout << "서버에 접속할 수 없습니다. 재시도하시겠습니까?(y/n)" << endl;
-		char answer;
 		cin >> answer;
 		if (answer == 'n') {
 			return 0;
@@ -17,6 +25,7 @@ int main(void) {
 		ret = chatManager.Init(SERVER_PORT, SERVER_IP);
 	}
 
+	cout << "채팅 프로그램을 시작합니다~" << endl;
 	chatManager.Start();
 
 	char name[NAME_LEN];
@@ -33,9 +42,10 @@ int main(void) {
 	cin.ignore();	//버퍼 비우기
 	getline(cin, msg);
 	while (msg != "exit") {
-		bool ret = chatManager.EchoMsg(msg);
+		//bool ret = chatManager.EchoMsg(msg);
+		bool ret = chatManager.ChatMsg(msg);
 		if (ret) {
-			cout << "---------------전송---------------" << endl;
+			cout << "---------------전송됨---------------" << endl;
 		}
 		getline(cin, msg);
 	}

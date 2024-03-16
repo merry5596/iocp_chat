@@ -1,7 +1,7 @@
 #pragma once
 #include "Define.h"
-#include "ErrorCode.h"
-#include "Packet.h"
+#include "../common/ErrorCode.h"
+#include "../common/Packet.h"
 #include "PacketBufferManager.h"
 #include "ClientNetwork.h"
 #include "UserInfo.h"
@@ -56,11 +56,28 @@ public:
 	}
 
 	bool EchoMsg(string msg) {
+		if (msg.length() >= ECHO_MSG_LEN) {
+			cout << "메시지가 너무 깁니다." << endl;
+			return false;
+		}
 		EchoPacket echoPkt;
 		echoPkt.packetID = (UINT16)PACKET_ID::ECHO;
 		echoPkt.packetSize = sizeof(EchoPacket);
-		CopyMemory(echoPkt.msg, msg.c_str(), sizeof(msg));
+		CopyMemory(echoPkt.msg, msg.c_str(), msg.length());
 		return SendData((char*)&echoPkt, sizeof(EchoPacket));
+	}
+
+	bool ChatMsg(string msg) {
+		if (msg.length() >= CHAT_MSG_LEN) {
+			cout << "메시지가 너무 깁니다." << endl;	//TODO: 쪼개서 보내기
+			return false;
+		}
+		ChatRequestPacket chatPkt;
+		chatPkt.packetID = (UINT16)PACKET_ID::CHAT_REQUEST;
+		chatPkt.packetSize = sizeof(ChatRequestPacket);
+		CopyMemory(chatPkt.msg, msg.c_str(), msg.length());
+		return SendData((char*)&chatPkt, sizeof(ChatRequestPacket));
+		return true;
 	}
 
 };

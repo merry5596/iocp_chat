@@ -22,10 +22,10 @@
     <ClInclude Include="UserManager.h" />
     <ClInclude Include="User.h" />
     <ClInclude Include="PacketManager.h" />
-    <ClInclude Include="ErrorCode.h">
+    <ClInclude Include="..\common\ErrorCode.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Packet.h">
+    <ClInclude Include="..\common\Packet.h">
       <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>

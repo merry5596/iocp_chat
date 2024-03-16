@@ -5,7 +5,7 @@
 
 const UINT16 PACKET_BUFFER_SIZE = 8096;
 
-enum USER_STATE {
+enum class USER_STATE : UINT16 {
 	NONE = 0,
 	LOGIN = 1,
 };
@@ -26,12 +26,12 @@ public:
 	
 	void SetLogin(char* name) {
 		strcpy_s(this->name, NAME_LEN, name);
-		state = USER_STATE::LOGIN;
+		state = (UINT16)USER_STATE::LOGIN;
 	}
 
 	void SetLogout() {
 		ZeroMemory(name, NAME_LEN);
-		state = USER_STATE::NONE;
+		state = (UINT16)USER_STATE::NONE;
 	}
 
 	char* GetName() {

@@ -1,6 +1,6 @@
 #pragma once
 #include "Define.h"
-#include "Packet.h"
+#include "../common/Packet.h"
 #include "UserInfo.h"
 
 #include <thread>
@@ -112,7 +112,7 @@ private:
 			ProcessEchoPacket(echoPkt);
 		}
 		else if (header->packetID == (UINT16)PACKET_ID::CHAT_NOTIFY) {
-			ChatPacket* chatPkt = (ChatPacket*)&packetBuffer[pktStartPos];
+			ChatNotifyPacket* chatPkt = (ChatNotifyPacket*)&packetBuffer[pktStartPos];
 			ProcessChatPacket(chatPkt);
 		}
 		else {
@@ -123,7 +123,7 @@ private:
 		//printf("읽기완료. writePos: %d, readPos: %d\n", writePos, readPos);
 		return true;
 	}
-	void ProcessChatPacket(ChatPacket* pkt) {
+	void ProcessChatPacket(ChatNotifyPacket* pkt) {
 		cout << pkt->sender << " : " << pkt->msg << endl;
 	}
 

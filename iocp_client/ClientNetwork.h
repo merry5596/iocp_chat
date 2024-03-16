@@ -44,7 +44,7 @@ public:
 			return false;
 		}
 
-		printf("[SUCCESS]connection completed.\n");
+		//printf("[SUCCESS]connection completed.\n");
 		return true;
 	}
 

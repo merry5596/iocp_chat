@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Define.h"
-#include "Packet.h"
+#include "../common/Packet.h"
 
 enum class USER_STATE : UINT16 {
 	NONE = 0,

@@ -52,7 +52,11 @@ struct EchoPacket : PACKET_HEADER {
 	char msg[ECHO_MSG_LEN];
 };
 
-struct ChatPacket : PACKET_HEADER {
+struct ChatRequestPacket : PACKET_HEADER {
+	char msg[CHAT_MSG_LEN];
+};
+
+struct ChatNotifyPacket : PACKET_HEADER {
 	char sender[NAME_LEN];
 	char msg[CHAT_MSG_LEN];
 };
