@@ -13,7 +13,7 @@ private:
 	unique_ptr<PacketBufferManager> packetBufferManager;
 
 public:
-	bool Init(UINT16 SERVER_PORT, const char* SERVER_IP) {
+	bool Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		packetBufferManager = make_unique<PacketBufferManager>();
 		packetBufferManager->Init();
 		return ClientNetwork::Init(SERVER_PORT, SERVER_IP);
@@ -29,9 +29,23 @@ public:
 		ClientNetwork::End();
 	}
 
-	void OnReceive(char* data, UINT16 size) {
-		//printf("[RECV] size: %d\n", size);
-		packetBufferManager->OnDataReceive(data, size);
+	void OnReceive(char* data, UINT16 size, bool errflag, UINT32 err) {
+		if (errflag) {
+			printf("서버 통신 오류\n");
+			printf("종료: /exit\n");
+		}
+		else {
+			printf("[RECV] size: %d\n", size);
+			packetBufferManager->OnDataReceive(data, size);
+		}
+	}
+	void OnSend(char* data, UINT16 size, bool errflag, UINT32 err) {
+		if (errflag) {
+			printf("error: %d\n", err);
+		}
+		else {
+			printf("[SEND] size: %d\n", size);
+		}
 	}
 
 	bool Login(char* name) {
@@ -77,7 +91,6 @@ public:
 		chatPkt.packetSize = sizeof(ChatRequestPacket);
 		CopyMemory(chatPkt.msg, msg.c_str(), msg.length());
 		return SendData((char*)&chatPkt, sizeof(ChatRequestPacket));
-		return true;
 	}
 
 };

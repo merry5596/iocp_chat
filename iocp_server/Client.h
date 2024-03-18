@@ -5,7 +5,6 @@
 
 #include <mutex>
 #include <queue>
-#pragma comment (lib, "mswsock.lib")
 
 enum class CONNECTION_STATUS : UINT16 {
 	READY = 0,
@@ -17,38 +16,38 @@ class Client {
 private:
 	UINT32 index;
 	UINT8 status;
+
 	SOCKET acceptSocket;
+
 	char acceptBuffer[BUFFER_SIZE];
 	WSAOverlappedEx acceptOverlappedEx;
 
 	char recvBuffer[BUFFER_SIZE];
 	WSAOverlappedEx recvOverlappedEx;
 
-	//char sendBuffer[BUFFER_SIZE];
-	//WSAOverlappedEx sendOverlappedEx;
-
 	queue<WSAOverlappedEx*> sendingQueue;
 	mutex sendMtx;
-
-	bool isSending;
+	//bool isSending;
 	//	UINT32 latestClosedTime = 0;
 public:
-	Client();
+	//Client();
 	Client(UINT32 index) {
 		this->index = index;
 		status = (UINT16)CONNECTION_STATUS::READY;
-		isSending = false;
+		//isSending = false;
+	}
+
+	//Getters
+	UINT32 GetIndex() const {
+		return index;
 	}
 	UINT8 GetStatus() const {
 		return status;
 	}
-	UINT32 GetIndex() const {
-		return index;
-	}
+
 	bool PostAccept(SOCKET listenSocket) {	//AccepterThread에서 접근(단일스레드)
 		acceptSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 		if (acceptSocket == INVALID_SOCKET) {
-			
 			printf("[ERROR]WSASocket() error: %d\n", WSAGetLastError());
 			return false;
 		}
@@ -58,8 +57,8 @@ public:
 		ZeroMemory(&acceptOverlappedEx, sizeof(WSAOverlappedEx));
 		acceptOverlappedEx.operation = IOOperation::ACCEPT;
 		acceptOverlappedEx.clientIndex = index;
-		acceptOverlappedEx.wsaBuf.buf = nullptr;
 		acceptOverlappedEx.wsaBuf.len = 0;
+		acceptOverlappedEx.wsaBuf.buf = nullptr;
 		bool ret = AcceptEx(listenSocket, acceptSocket, acceptBuffer, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, &bytes, (LPOVERLAPPED) & acceptOverlappedEx);
 		if (ret == false && WSAGetLastError() != ERROR_IO_PENDING) {
 			printf("[ERROR]AcceptEx() error: %d\n", WSAGetLastError());
@@ -122,7 +121,7 @@ public:
 		}
 	}
 
-	bool PostSend() {	//SenderThread가 접근. 함수 호출 전부터 뮤텍스 걸려있는 상태
+	void PostSend() {	//SenderThread가 접근. 함수 호출 전부터 뮤텍스 걸려있는 상태
 		auto sendOverlappedEx = sendingQueue.front();
 		DWORD bufCnt = 1;	//버퍼 개수. 일반적으로 1개로 설정
 		DWORD bytes = 0;
@@ -130,17 +129,14 @@ public:
 		int ret = WSASend(acceptSocket, &(sendOverlappedEx->wsaBuf), bufCnt, &bytes, flags, (LPWSAOVERLAPPED)sendOverlappedEx, NULL);
 		if (ret != 0 && WSAGetLastError() != ERROR_IO_PENDING) {
 			printf("[ERROR]WSASend() error: %d\n", WSAGetLastError());
-			return false;
 		}
-
-		return true;
 	}
 
 	void SendCompleted() {	//workerThread가 접근
 		lock_guard<mutex> lock(sendMtx);
-		auto completedThing = sendingQueue.front();
-		delete completedThing->wsaBuf.buf;
-		delete completedThing;
+		auto completedObj = sendingQueue.front();
+		delete completedObj->wsaBuf.buf;
+		delete completedObj;
 
 		sendingQueue.pop();
 		if (sendingQueue.size() == 1) {
@@ -150,8 +146,7 @@ public:
 
 	void CloseSocket(bool isForce = false) {
 		linger lingerOpt = { 0, 0 };
-		//강제 종료 시, 대기 안하고 즉시 종료
-		if (isForce) {
+		if (isForce) {	//강제 종료 시, 대기 안하고 즉시 종료
 			lingerOpt.l_onoff = 1;
 		}
 

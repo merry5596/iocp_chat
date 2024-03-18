@@ -1,8 +1,10 @@
 #pragma once
 
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-#include <mswsock.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>	//ipv6
+#include <mswsock.h>	//AcceptEx
+#pragma comment(lib, "ws2_32")
+#pragma comment (lib, "mswsock.lib")
 
 #include <iostream>
 using namespace std;

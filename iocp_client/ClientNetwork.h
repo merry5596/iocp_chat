@@ -8,15 +8,14 @@ class ClientNetwork {
 private:
 	SOCKET sock;
 	thread recvThread;
-	bool isRecvRun;
 
 public:
-	ClientNetwork() {}
+	bool isRecvRun;
 	~ClientNetwork() {
 		WSACleanup();
 	}
 
-	bool Init(UINT16 SERVER_PORT, const char* SERVER_IP) {
+	bool Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		//WinSock 사용
 		WSADATA wsaData;
 		int ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -25,27 +24,13 @@ public:
 			return false;
 		}
 
-		//socket 생성
-		sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (sock == INVALID_SOCKET) {
-			cout << "[ERROR]socket() error: " << GetLastError() << endl;
+		//소켓 생성
+		if (CreateSocket() == false) {
 			return false;
 		}
 
 		//연결
-		SOCKADDR_IN addr;
-		addr.sin_family = AF_INET;
-		addr.sin_port = htons(SERVER_PORT);
-		//	addr.sin_addr.s_addr = inet_pton(AF_INET, SERVER_IP, &ipv4_addr);
-		addr.sin_addr.s_addr = inet_addr(SERVER_IP);
-		ret = connect(sock, (SOCKADDR*)&addr, sizeof(SOCKADDR_IN));
-		if (ret != 0) {
-			cout << "[ERROR]connect() error: " << GetLastError() << endl;
-			return false;
-		}
-
-		//printf("[SUCCESS]connection completed.\n");
-		return true;
+		return Connect(SERVER_PORT, SERVER_IP);
 	}
 
 	void Start() {
@@ -61,31 +46,71 @@ public:
 		}
 	}
 
-	bool SendData(char* data, UINT16 size) {
-		int ret = send(sock, data, size, 0);
-		if (ret <= 0) {
-			cout <<"[ERROR]send() failed" << endl;
+	bool Refresh(const UINT16 SERVER_PORT, const char* SERVER_IP) {
+		End();
+		bool ret = CreateSocket();
+		if (ret == false) {
 			return false;
 		}
-
-		//printf("[SEND] size: %d\n", size);
+		
+		ret = Connect(SERVER_PORT, SERVER_IP);
+		if (ret == false) {
+			return false;
+		}
+		Start();
 		return true;
+	}
+
+	bool SendData(char* data, UINT16 size) {
+		bool errflag = false;
+		int ret = send(sock, data, size, 0);
+		if (ret <= 0) {
+			errflag = true;
+		}
+		OnSend(data, ret, errflag, errno);
+		return errflag ? false : true;
 	}
 
 	void RecvThread() {
 		isRecvRun = true;
 		char buf[BUFFER_SIZE];
+		bool errflag;
 		while (isRecvRun) {
+			errflag = false;
 			ZeroMemory(buf, BUFFER_SIZE);
 			int recvBytes = recv(sock, buf, BUFFER_SIZE, 0);
 			if (recvBytes <= 0 || errno == ECONNRESET || errno == ENOTCONN) {
+				errflag = true;
 				isRecvRun = false;
-				cout << "서버 연결 중단" << endl;
-				break;
 			}
-			OnReceive(buf, recvBytes);
+			OnReceive(buf, recvBytes, errflag, errno);
 		}
 	}
 
-	virtual void OnReceive(char* data, UINT16 size) {}
+	virtual void OnSend(char* data, UINT16 size, bool errflag, UINT32 err) {}
+	virtual void OnReceive(char* data, UINT16 size, bool errflag, UINT32 err) {}
+
+private:
+	bool CreateSocket() {
+		sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (sock == INVALID_SOCKET) {
+			cout << "[ERROR]socket() error: " << GetLastError() << endl;
+			return false;
+		}
+		return true;
+	}
+
+	bool Connect(const UINT16 SERVER_PORT, const char* SERVER_IP) {
+		SOCKADDR_IN addr;
+		addr.sin_family = AF_INET;
+		addr.sin_port = htons(SERVER_PORT);
+		inet_pton(AF_INET, SERVER_IP, &addr.sin_addr.s_addr);
+		auto ret = connect(sock, (SOCKADDR*)&addr, sizeof(SOCKADDR_IN));
+		if (ret != 0) {
+			cout << "[ERROR]connect() error: " << GetLastError() << endl;
+			return false;
+		}
+		return true;
+	}
+
 };

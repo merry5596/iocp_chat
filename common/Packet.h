@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Define.h"
+#include <Windows.h>
 #include <vector>
 
 const UINT16 NAME_LEN = 10;

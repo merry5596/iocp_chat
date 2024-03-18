@@ -37,11 +37,11 @@ int main(void) {
 
 
 	string msg;
-	cout << "채팅 시작(종료는 exit)" << endl;
+	cout << "채팅 시작(종료는 /exit)" << endl;
 
 	cin.ignore();	//버퍼 비우기
 	getline(cin, msg);
-	while (msg != "exit") {
+	while (msg != "/exit") {
 		//bool ret = chatManager.EchoMsg(msg);
 		bool ret = chatManager.ChatMsg(msg);
 		if (ret) {

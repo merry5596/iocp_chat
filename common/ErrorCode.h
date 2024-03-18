@@ -1,5 +1,4 @@
 #pragma once
-#include "Define.h"
 
 enum ERROR_CODE {
 	NONE = 0,
