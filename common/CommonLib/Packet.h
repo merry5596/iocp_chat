@@ -1,5 +1,8 @@
 #pragma once
 
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
 const UINT16 NAME_LEN = 10;
 const UINT16 ECHO_MSG_LEN = 252;
 const UINT16 CHAT_MSG_LEN = 242;

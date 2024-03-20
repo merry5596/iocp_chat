@@ -1,11 +1,8 @@
 #pragma once
-//#include "Define.h"
-//#include "ClientNetwork.h"
-#include "../ClientNetLib/TcpNetwork.h"
-#include "../ClientNetLib/Define.h"
-
-#include "../common/ErrorCode.h"
-#include "../common/Packet.h"
+#include "Define.h"
+#include "TcpNetwork.h"
+#include "ErrorCode.h"
+#include "Packet.h"
 #include "PacketBufferManager.h"
 #include "UserInfo.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../ServerNetLib/IOCPNetwork.h"
+#include "IOCPNetwork.h"
 #include "PacketManager.h"
 #include "UserManager.h"
 

@@ -4,7 +4,6 @@
 
 #include <mutex>
 #include <queue>
-#include <iostream>
 using namespace std;
 
 namespace ServerNetLib {

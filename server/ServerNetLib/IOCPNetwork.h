@@ -5,7 +5,6 @@
 
 #include <vector>
 #include <thread>
-#include <iostream>
 using namespace std;
 
 namespace ServerNetLib {

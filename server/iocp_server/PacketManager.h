@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../ServerNetLib/Define.h"
+#include "Define.h"
 #include "Packet.h"
+#include "ErrorCode.h"
 #include "UserManager.h"
 
 #include <thread>

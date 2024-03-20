@@ -1,11 +1,10 @@
 #pragma once
-//#include "Define.h"
 
-#include "../common/Packet.h"
+#include "Packet.h"
 #include "UserInfo.h"
+
 #include <thread>
 #include <mutex>
-
 #include <iostream>
 using namespace std;
 
