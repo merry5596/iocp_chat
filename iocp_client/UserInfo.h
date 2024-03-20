@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Define.h"
+//#include "Define.h"
 #include "../common/Packet.h"
 
 enum class USER_STATE : UINT16 {

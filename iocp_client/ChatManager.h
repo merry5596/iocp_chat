@@ -1,13 +1,19 @@
 #pragma once
-#include "Define.h"
+//#include "Define.h"
+//#include "ClientNetwork.h"
+#include "../ClientNetLib/ClientNetLib.h"
+#include "../ClientNetLib/Define.h"
+
 #include "../common/ErrorCode.h"
 #include "../common/Packet.h"
 #include "PacketBufferManager.h"
-#include "ClientNetwork.h"
 #include "UserInfo.h"
 
+#include <iostream>
+using namespace std;
+
 //채팅 앱의 기능 관련 컨트롤러
-class ChatManager : public ClientNetwork {
+class ChatManager : public ClientNetLib::ClientNetwork {
 private:
 	UserInfo userInfo;
 	unique_ptr<PacketBufferManager> packetBufferManager;

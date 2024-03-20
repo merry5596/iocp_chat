@@ -1,21 +1,11 @@
-#pragma once
-#include "Define.h"
+﻿#include "ClientNetLib.h"
 
-#include <thread>
-#include <errno.h>
-
-class ClientNetwork {
-private:
-	SOCKET sock;
-	thread recvThread;
-
-public:
-	bool isRecvRun;
-	~ClientNetwork() {
+namespace ClientNetLib {
+	ClientNetwork::~ClientNetwork() {
 		WSACleanup();
 	}
 
-	bool Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
+	bool ClientNetwork::Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		//WinSock 사용
 		WSADATA wsaData;
 		int ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -33,12 +23,12 @@ public:
 		return Connect(SERVER_PORT, SERVER_IP);
 	}
 
-	void Start() {
+	void ClientNetwork::Start() {
 		//Receive 스레드 시작
 		recvThread = thread([&]() { RecvThread(); });
 	}
 
-	void End() {
+	void ClientNetwork::End() {
 		isRecvRun = false;
 		closesocket(sock);
 		if (recvThread.joinable()) {
@@ -46,13 +36,13 @@ public:
 		}
 	}
 
-	bool Refresh(const UINT16 SERVER_PORT, const char* SERVER_IP) {
+	bool ClientNetwork::Refresh(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		End();
 		bool ret = CreateSocket();
 		if (ret == false) {
 			return false;
 		}
-		
+
 		ret = Connect(SERVER_PORT, SERVER_IP);
 		if (ret == false) {
 			return false;
@@ -61,7 +51,7 @@ public:
 		return true;
 	}
 
-	bool SendData(char* data, UINT16 size) {
+	bool ClientNetwork::SendData(char* data, UINT16 size) {
 		bool errflag = false;
 		int ret = send(sock, data, size, 0);
 		if (ret <= 0) {
@@ -71,7 +61,7 @@ public:
 		return errflag ? false : true;
 	}
 
-	void RecvThread() {
+	void ClientNetwork::RecvThread() {
 		isRecvRun = true;
 		char buf[BUFFER_SIZE];
 		bool errflag;
@@ -87,11 +77,7 @@ public:
 		}
 	}
 
-	virtual void OnSend(char* data, UINT16 size, bool errflag, UINT32 err) {}
-	virtual void OnReceive(char* data, UINT16 size, bool errflag, UINT32 err) {}
-
-private:
-	bool CreateSocket() {
+	bool ClientNetwork::CreateSocket() {
 		sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (sock == INVALID_SOCKET) {
 			cout << "[ERROR]socket() error: " << GetLastError() << endl;
@@ -100,7 +86,7 @@ private:
 		return true;
 	}
 
-	bool Connect(const UINT16 SERVER_PORT, const char* SERVER_IP) {
+	bool ClientNetwork::Connect(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		SOCKADDR_IN addr;
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(SERVER_PORT);
@@ -112,5 +98,4 @@ private:
 		}
 		return true;
 	}
-
-};
+}

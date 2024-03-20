@@ -2,30 +2,30 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PacketBufferManager.h" />
-    <ClCompile Include="UserInfo.h" />
+    <ClCompile Include="PacketBufferManager.h">
+      <Filter>ChatLogic</Filter>
+    </ClCompile>
+    <ClCompile Include="UserInfo.h">
+      <Filter>ChatLogic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ChatManager.h" />
-    <ClInclude Include="ClientNetwork.h">
-      <Filter>ClientNetwork</Filter>
-    </ClInclude>
-    <ClInclude Include="Define.h">
-      <Filter>ClientNetwork</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\ErrorCode.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\common\Packet.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="ChatManager.h">
+      <Filter>ChatLogic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="ClientNetwork">
-      <UniqueIdentifier>{dfa4c5d3-00c5-4936-8e58-95f665f9d0c6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Common">
       <UniqueIdentifier>{16f42033-6bbe-457b-9fc3-da37c2cdab63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ChatLogic">
+      <UniqueIdentifier>{a28eaccb-bc9b-42ec-89ff-d1f44355a471}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
