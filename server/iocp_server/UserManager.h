@@ -59,6 +59,10 @@ public:
 		curUserCnt--;
 	}
 
+	void EnterRoom(UINT32 clientIndex, UINT16 roomNum) {
+		userList[clientIndex]->EnterRoom(roomNum);
+	}
+
 	vector<UINT16> GetAllUserIndex() {
 		vector<UINT16> userIndexList;
 		for (auto &userPair : userDic) {

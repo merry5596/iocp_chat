@@ -135,6 +135,10 @@ void PacketManager::ProcessRoomEnterRequest(UINT16 clientIndex, char* data, UINT
 		resPkt.result = ERROR_CODE::ROOM_FULL;
 	}
 	else {	//문제없음
+		userManager->EnterRoom(clientIndex, reqPkt->roomNum);
+		//roomManager->EnterRoom(clientIndex);
+
+		resPkt.roomNum = reqPkt->roomNum;
 		resPkt.result = ERROR_CODE::NONE;
 	}
 
