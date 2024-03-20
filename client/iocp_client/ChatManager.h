@@ -1,7 +1,7 @@
 #pragma once
 //#include "Define.h"
 //#include "ClientNetwork.h"
-#include "../ClientNetLib/ClientNetLib.h"
+#include "../ClientNetLib/TcpNetwork.h"
 #include "../ClientNetLib/Define.h"
 
 #include "../common/ErrorCode.h"
@@ -13,7 +13,7 @@
 using namespace std;
 
 //채팅 앱의 기능 관련 컨트롤러
-class ChatManager : public ClientNetLib::ClientNetwork {
+class ChatManager : public ClientNetLib::TcpNetwork {
 private:
 	UserInfo userInfo;
 	unique_ptr<PacketBufferManager> packetBufferManager;
@@ -22,22 +22,22 @@ public:
 	bool Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		packetBufferManager = make_unique<PacketBufferManager>();
 		packetBufferManager->Init();
-		return ClientNetwork::Init(SERVER_PORT, SERVER_IP);
+		return TcpNetwork::Init(SERVER_PORT, SERVER_IP);
 	}
 
 	void Start() {
 		packetBufferManager->Start();
-		ClientNetwork::Start();
+		TcpNetwork::Start();
 	}
 
 	void End() {
 		packetBufferManager->End();
-		ClientNetwork::End();
+		TcpNetwork::End();
 	}
 
 	void OnReceive(char* data, UINT16 size, bool errflag, UINT32 err) {
 		if (errflag) {
-			printf("서버 통신 오류\n");
+			printf("서버 통신이 종료됨\n");
 			printf("종료: /exit\n");
 		}
 		else {

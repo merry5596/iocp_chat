@@ -4,4 +4,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-const UINT16 BUFFER_SIZE = 256;
+namespace ClientNetLib {
+
+	const UINT16 BUFFER_SIZE = 256;
+
+}

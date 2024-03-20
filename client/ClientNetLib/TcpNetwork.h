@@ -8,14 +8,15 @@
 using namespace std;
 
 namespace ClientNetLib {
-	class ClientNetwork {
+
+	class TcpNetwork {
 	private:
 		SOCKET sock;
 		thread recvThread;
 		bool isRecvRun;
 
 	public:
-		~ClientNetwork();
+		~TcpNetwork();
 		bool Init(const UINT16 SERVER_PORT, const char* SERVER_IP);
 		void Start();
 		void End();
@@ -28,4 +29,5 @@ namespace ClientNetLib {
 		bool CreateSocket();
 		bool Connect(const UINT16 SERVER_PORT, const char* SERVER_IP);
 	};
+
 }

@@ -141,11 +141,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ClientNetLib.h" />
+    <ClInclude Include="TcpNetwork.h" />
     <ClInclude Include="Define.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ClientNetLib.cpp" />
+    <ClCompile Include="TcpNetwork.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

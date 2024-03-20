@@ -1,31 +1,15 @@
-#pragma once
+﻿#include "IOCPNetwork.h"
 
-#include "Client.h"
+namespace ServerNetLib {
 
-#include <vector>
-#include <thread>
-
-class IOCPServer {
-private:
-	HANDLE IOCPHandle;
-	SOCKET listenSocket;
-
-	vector<Client*> clientPool;
-
-	thread accepterThread;
-	vector<thread> workerThreadPool;
-	bool isAccepterRun;
-	bool isWorkerRun;
-
-public:
-	~IOCPServer() {
+	IOCPNetwork::~IOCPNetwork() {
 		WSACleanup();
 		for (auto client : clientPool) {
 			delete client;
 		}
 	}
 
-	bool IOCPInit(UINT16 SERVER_PORT, UINT16 CLIENTPOOL_SIZE) {
+	bool IOCPNetwork::IOCPInit(UINT16 SERVER_PORT, UINT16 CLIENTPOOL_SIZE) {
 		//Winsock 사용
 		WSAData wsaData;
 		int ret = WSAStartup(MAKEWORD(2, 2), &wsaData);	//2.2 버전으로 초기화, wsaData에 저장
@@ -77,7 +61,7 @@ public:
 		return true;
 	}
 
-	void IOCPStart() {
+	void IOCPNetwork::IOCPStart() {
 		//Worker 스레드 시작
 		isWorkerRun = true;
 		for (int i = 0; i < THREADPOOL_SIZE; i++) {
@@ -89,7 +73,7 @@ public:
 		accepterThread = thread([this]() { AccepterThread(); });
 	}
 
-	void IOCPEnd() {
+	void IOCPNetwork::IOCPEnd() {
 		isWorkerRun = false;
 		CloseHandle(IOCPHandle);
 		for (auto& workerThread : workerThreadPool) {
@@ -105,23 +89,17 @@ public:
 		}
 	}
 
-	void SendData(UINT32 clientIndex, char* data, UINT16 size) {
+	void IOCPNetwork::SendData(UINT32 clientIndex, char* data, UINT16 size) {
 		clientPool[clientIndex]->SendData(data, size);
 	}
 
-	virtual void OnConnect(UINT32 clientIndex) {}
-	virtual void OnReceive(UINT32 clientIndex, char* data, UINT16 size) {}
-	virtual void OnSend(UINT32 clientIndex, UINT16 size) {}
-	virtual void OnDisconnect(UINT32 clientIndex) {}
-
-private:
-	void CreateClientPool(UINT16 CLIENTPOOL_SIZE) {
+	void IOCPNetwork::CreateClientPool(UINT16 CLIENTPOOL_SIZE) {
 		for (int i = 0; i < CLIENTPOOL_SIZE; i++) {
-			clientPool.push_back(new Client(i));
+			clientPool.push_back(new ClientConnection(i));
 		}
 	}
 
-	void AccepterThread() {
+	void IOCPNetwork::AccepterThread() {
 		while (isAccepterRun) {
 			for (auto client : clientPool) {
 				if (client->GetStatus() == (UINT16)CONNECTION_STATUS::READY) {
@@ -132,9 +110,9 @@ private:
 		}
 	}
 
-	void WorkerThread() {
+	void IOCPNetwork::WorkerThread() {
 		DWORD recvBytes = 0;
-		Client* client = nullptr;
+		ClientConnection* client = nullptr;
 		LPOVERLAPPED lpOverlapped = nullptr;
 		while (isWorkerRun) {
 			bool ret = GetQueuedCompletionStatus(IOCPHandle, &recvBytes, (PULONG_PTR)&client, &lpOverlapped, INFINITE);
@@ -170,4 +148,5 @@ private:
 			}
 		}
 	}
-};
+
+}

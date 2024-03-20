@@ -1,10 +1,10 @@
 #pragma once
 
-#include "IOCPServer.h"
+#include "../ServerNetLib/IOCPNetwork.h"
 #include "PacketManager.h"
 #include "UserManager.h"
 
-class EchoServer : public IOCPServer {
+class EchoServer : public ServerNetLib::IOCPNetwork {
 private:
 	unique_ptr<PacketManager> packetManager;
 public:

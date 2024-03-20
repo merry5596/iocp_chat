@@ -1,11 +1,12 @@
-﻿#include "ClientNetLib.h"
+﻿#include "TcpNetwork.h"
 
 namespace ClientNetLib {
-	ClientNetwork::~ClientNetwork() {
+
+	TcpNetwork::~TcpNetwork() {
 		WSACleanup();
 	}
 
-	bool ClientNetwork::Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
+	bool TcpNetwork::Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		//WinSock 사용
 		WSADATA wsaData;
 		int ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -23,12 +24,12 @@ namespace ClientNetLib {
 		return Connect(SERVER_PORT, SERVER_IP);
 	}
 
-	void ClientNetwork::Start() {
+	void TcpNetwork::Start() {
 		//Receive 스레드 시작
 		recvThread = thread([&]() { RecvThread(); });
 	}
 
-	void ClientNetwork::End() {
+	void TcpNetwork::End() {
 		isRecvRun = false;
 		closesocket(sock);
 		if (recvThread.joinable()) {
@@ -36,7 +37,7 @@ namespace ClientNetLib {
 		}
 	}
 
-	bool ClientNetwork::Refresh(const UINT16 SERVER_PORT, const char* SERVER_IP) {
+	bool TcpNetwork::Refresh(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		End();
 		bool ret = CreateSocket();
 		if (ret == false) {
@@ -51,7 +52,7 @@ namespace ClientNetLib {
 		return true;
 	}
 
-	bool ClientNetwork::SendData(char* data, UINT16 size) {
+	bool TcpNetwork::SendData(char* data, UINT16 size) {
 		bool errflag = false;
 		int ret = send(sock, data, size, 0);
 		if (ret <= 0) {
@@ -61,7 +62,7 @@ namespace ClientNetLib {
 		return errflag ? false : true;
 	}
 
-	void ClientNetwork::RecvThread() {
+	void TcpNetwork::RecvThread() {
 		isRecvRun = true;
 		char buf[BUFFER_SIZE];
 		bool errflag;
@@ -77,7 +78,7 @@ namespace ClientNetLib {
 		}
 	}
 
-	bool ClientNetwork::CreateSocket() {
+	bool TcpNetwork::CreateSocket() {
 		sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (sock == INVALID_SOCKET) {
 			cout << "[ERROR]socket() error: " << GetLastError() << endl;
@@ -86,7 +87,7 @@ namespace ClientNetLib {
 		return true;
 	}
 
-	bool ClientNetwork::Connect(const UINT16 SERVER_PORT, const char* SERVER_IP) {
+	bool TcpNetwork::Connect(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		SOCKADDR_IN addr;
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(SERVER_PORT);
@@ -98,4 +99,5 @@ namespace ClientNetLib {
 		}
 		return true;
 	}
+
 }

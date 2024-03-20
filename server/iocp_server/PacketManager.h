@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Define.h"
+#include "../ServerNetLib/Define.h"
 #include "Packet.h"
 #include "UserManager.h"
 
@@ -9,7 +9,8 @@
 #include <mutex>
 #include <functional>
 #include <unordered_map>
-
+#include <iostream>
+using namespace std;
 
 class UserManager;
 class PacketManager {

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.8.34511.84
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iocp_server", "iocp_server.vcxproj", "{DE46FE8E-C7ED-44A6-A54C-5010FE74FA1E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerNetLib", "..\ServerNetLib\ServerNetLib.vcxproj", "{D1C401D5-7AA7-46A4-81BF-45B755E32AAD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{DE46FE8E-C7ED-44A6-A54C-5010FE74FA1E}.Release|x64.Build.0 = Release|x64
 		{DE46FE8E-C7ED-44A6-A54C-5010FE74FA1E}.Release|x86.ActiveCfg = Release|Win32
 		{DE46FE8E-C7ED-44A6-A54C-5010FE74FA1E}.Release|x86.Build.0 = Release|Win32
+		{D1C401D5-7AA7-46A4-81BF-45B755E32AAD}.Debug|x64.ActiveCfg = Debug|x64
+		{D1C401D5-7AA7-46A4-81BF-45B755E32AAD}.Debug|x64.Build.0 = Debug|x64
+		{D1C401D5-7AA7-46A4-81BF-45B755E32AAD}.Debug|x86.ActiveCfg = Debug|Win32
+		{D1C401D5-7AA7-46A4-81BF-45B755E32AAD}.Debug|x86.Build.0 = Debug|Win32
+		{D1C401D5-7AA7-46A4-81BF-45B755E32AAD}.Release|x64.ActiveCfg = Release|x64
+		{D1C401D5-7AA7-46A4-81BF-45B755E32AAD}.Release|x64.Build.0 = Release|x64
+		{D1C401D5-7AA7-46A4-81BF-45B755E32AAD}.Release|x86.ActiveCfg = Release|Win32
+		{D1C401D5-7AA7-46A4-81BF-45B755E32AAD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

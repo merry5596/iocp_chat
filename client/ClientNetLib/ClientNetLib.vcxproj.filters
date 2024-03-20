@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClientNetLib.h">
+    <ClInclude Include="TcpNetwork.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Define.h">
@@ -23,7 +23,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ClientNetLib.cpp">
+    <ClCompile Include="TcpNetwork.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
