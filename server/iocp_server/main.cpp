@@ -1,4 +1,4 @@
-#include "EchoServer.h"
+#include "ChatServer.h"
 
 #include <iostream>
 using namespace std;
@@ -7,11 +7,11 @@ const UINT16 SERVER_PORT = 11021;
 const UINT16 CLIENTPOOL_SIZE = 100;
 
 int main(void) {
-	EchoServer server;
+	ChatServer server;
 	server.Init(SERVER_PORT, CLIENTPOOL_SIZE);
 	server.Start();
 
-	printf("Echo Server Start! ");
+	printf("Chat Server Start! ");
 	while (true) {
 		std::string key;
 		cout << "press \'exit\' to exit" << endl;

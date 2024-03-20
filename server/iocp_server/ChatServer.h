@@ -1,10 +1,10 @@
 #pragma once
 
-#include "IOCPServer.h"
+#include "IOCPNetwork.h"
 #include "PacketManager.h"
 #include "UserManager.h"
 
-class EchoServer : public IOCPServer {
+class ChatServer : public ServerNetLib::IOCPNetwork {
 private:
 	unique_ptr<PacketManager> packetManager;
 public:
@@ -23,7 +23,7 @@ public:
 	void End() {
 		packetManager->End();
 		IOCPEnd();
-		printf("Echo Server End...");
+		printf("Chat Server End...");
 	}
 
 	virtual void OnConnect(UINT32 clientIndex) {

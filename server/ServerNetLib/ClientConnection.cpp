@@ -1,54 +1,16 @@
-#pragma once
+#include "ClientConnection.h"
 
-#include "Define.h"
-#include "Packet.h"
+namespace ServerNetLib {
 
-#include <mutex>
-#include <queue>
-#pragma comment (lib, "mswsock.lib")
-
-enum class CONNECTION_STATUS : UINT16 {
-	READY = 0,
-	WAITING_FOR_ACCEPT = 1,
-	CONNECTING = 2,
-};
-
-class Client {
-private:
-	UINT32 index;
-	UINT8 status;
-	SOCKET acceptSocket;
-	char acceptBuffer[BUFFER_SIZE];
-	WSAOverlappedEx acceptOverlappedEx;
-
-	char recvBuffer[BUFFER_SIZE];
-	WSAOverlappedEx recvOverlappedEx;
-
-	//char sendBuffer[BUFFER_SIZE];
-	//WSAOverlappedEx sendOverlappedEx;
-
-	queue<WSAOverlappedEx*> sendingQueue;
-	mutex sendMtx;
-
-	bool isSending;
-	//	UINT32 latestClosedTime = 0;
-public:
-	Client();
-	Client(UINT32 index) {
+	ClientConnection::ClientConnection(UINT32 index) {
 		this->index = index;
 		status = (UINT16)CONNECTION_STATUS::READY;
-		isSending = false;
+		//isSending = false;
 	}
-	UINT8 GetStatus() const {
-		return status;
-	}
-	UINT32 GetIndex() const {
-		return index;
-	}
-	bool PostAccept(SOCKET listenSocket) {	//AccepterThread에서 접근(단일스레드)
+
+	bool ClientConnection::PostAccept(SOCKET listenSocket) {	//AccepterThread에서 접근(단일스레드)
 		acceptSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 		if (acceptSocket == INVALID_SOCKET) {
-			
 			printf("[ERROR]WSASocket() error: %d\n", WSAGetLastError());
 			return false;
 		}
@@ -58,9 +20,9 @@ public:
 		ZeroMemory(&acceptOverlappedEx, sizeof(WSAOverlappedEx));
 		acceptOverlappedEx.operation = IOOperation::ACCEPT;
 		acceptOverlappedEx.clientIndex = index;
-		acceptOverlappedEx.wsaBuf.buf = nullptr;
 		acceptOverlappedEx.wsaBuf.len = 0;
-		bool ret = AcceptEx(listenSocket, acceptSocket, acceptBuffer, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, &bytes, (LPOVERLAPPED) & acceptOverlappedEx);
+		acceptOverlappedEx.wsaBuf.buf = nullptr;
+		bool ret = AcceptEx(listenSocket, acceptSocket, acceptBuffer, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, &bytes, (LPOVERLAPPED)&acceptOverlappedEx);
 		if (ret == false && WSAGetLastError() != ERROR_IO_PENDING) {
 			printf("[ERROR]AcceptEx() error: %d\n", WSAGetLastError());
 			return false;
@@ -70,7 +32,7 @@ public:
 		return true;
 	}
 
-	bool ConnectIOCP(HANDLE IOCPHandle) {
+	bool ClientConnection::ConnectIOCP(HANDLE IOCPHandle) {
 		auto retHandle = CreateIoCompletionPort((HANDLE)acceptSocket, IOCPHandle, (ULONG_PTR)this, 0);
 		if (retHandle == NULL) {
 			printf("[ERROR]CreateIoCompletionPort()(bind accepter) error: %d\n", WSAGetLastError());
@@ -81,11 +43,11 @@ public:
 		if (ret == false) {
 			return false;
 		}
-		
+
 		return true;
 	}
 
-	bool PostReceive() {	//accept 성공 직후 첫 호출. accpet는 한번이므로 앞으로는 WSARecv 완료시에만 이 함수가 호출. 즉, 멀티스레드 접근 불가
+	bool ClientConnection::PostReceive() {	//accept 성공 직후 첫 호출. accpet는 한번이므로 앞으로는 WSARecv 완료시에만 이 함수가 호출. 즉, 멀티스레드 접근 불가
 		DWORD bufCnt = 1;	//버퍼 개수. 일반적으로 1개로 설정
 		DWORD bytes = 0;
 		DWORD flags = 0;
@@ -95,7 +57,7 @@ public:
 		recvOverlappedEx.clientIndex = index;
 		recvOverlappedEx.wsaBuf.len = BUFFER_SIZE;
 		recvOverlappedEx.wsaBuf.buf = recvBuffer;
-		int ret = WSARecv(acceptSocket, &(recvOverlappedEx.wsaBuf), bufCnt, &bytes, &flags, (LPWSAOVERLAPPED) & recvOverlappedEx, NULL);
+		int ret = WSARecv(acceptSocket, &(recvOverlappedEx.wsaBuf), bufCnt, &bytes, &flags, (LPWSAOVERLAPPED)&recvOverlappedEx, NULL);
 		if (ret != 0 && WSAGetLastError() != ERROR_IO_PENDING) {
 			printf("[ERROR]WSARecv() error: %d\n", WSAGetLastError());
 			return false;
@@ -105,7 +67,7 @@ public:
 		return true;
 	}
 
-	void SendData(char* data, UINT16 size) {	//PacketThread가 접근
+	void ClientConnection::SendData(char* data, UINT16 size) {	//PacketThread가 접근
 		char* sendBuffer = new char[BUFFER_SIZE];
 		CopyMemory(sendBuffer, data, size);
 		WSAOverlappedEx* sendOverlappedEx = new WSAOverlappedEx;
@@ -122,7 +84,7 @@ public:
 		}
 	}
 
-	bool PostSend() {	//SenderThread가 접근. 함수 호출 전부터 뮤텍스 걸려있는 상태
+	void ClientConnection::PostSend() {	//SenderThread가 접근. 함수 호출 전부터 뮤텍스 걸려있는 상태
 		auto sendOverlappedEx = sendingQueue.front();
 		DWORD bufCnt = 1;	//버퍼 개수. 일반적으로 1개로 설정
 		DWORD bytes = 0;
@@ -130,17 +92,14 @@ public:
 		int ret = WSASend(acceptSocket, &(sendOverlappedEx->wsaBuf), bufCnt, &bytes, flags, (LPWSAOVERLAPPED)sendOverlappedEx, NULL);
 		if (ret != 0 && WSAGetLastError() != ERROR_IO_PENDING) {
 			printf("[ERROR]WSASend() error: %d\n", WSAGetLastError());
-			return false;
 		}
-
-		return true;
 	}
 
-	void SendCompleted() {	//workerThread가 접근
+	void ClientConnection::SendCompleted() {	//workerThread가 접근
 		lock_guard<mutex> lock(sendMtx);
-		auto completedThing = sendingQueue.front();
-		delete completedThing->wsaBuf.buf;
-		delete completedThing;
+		auto completedObj = sendingQueue.front();
+		delete completedObj->wsaBuf.buf;
+		delete completedObj;
 
 		sendingQueue.pop();
 		if (sendingQueue.size() == 1) {
@@ -148,17 +107,26 @@ public:
 		}
 	}
 
-	void CloseSocket(bool isForce = false) {
+	void ClientConnection::CloseSocket(bool isForce) {
 		linger lingerOpt = { 0, 0 };
-		//강제 종료 시, 대기 안하고 즉시 종료
-		if (isForce) {
+		if (isForce) {	//강제 종료 시, 대기 안하고 즉시 종료
 			lingerOpt.l_onoff = 1;
 		}
 
 		shutdown(acceptSocket, SD_BOTH);	//송수신 both 중단
-		setsockopt(acceptSocket, SOL_SOCKET, SO_LINGER, (const char*) & lingerOpt, sizeof(linger));
+		setsockopt(acceptSocket, SOL_SOCKET, SO_LINGER, (const char*)&lingerOpt, sizeof(linger));
 		closesocket(acceptSocket);
 
 		status = (UINT16)CONNECTION_STATUS::READY;
 	}
-};
+
+	//Getters
+	UINT32 ClientConnection::GetIndex() const {
+		return index;
+	}
+
+	UINT8 ClientConnection::GetStatus() const {
+		return status;
+	}
+
+}

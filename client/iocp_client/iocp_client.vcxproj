@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -104,11 +104,11 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>false</SDLCheck>
+      <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\iocp\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\iocp\common\CommonLib;C:\iocp\client\ClientNetLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,11 +137,15 @@
     <ClCompile Include="UserInfo.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\common\ErrorCode.h" />
-    <ClInclude Include="..\common\Packet.h" />
-    <ClInclude Include="ClientNetwork.h" />
-    <ClInclude Include="Define.h" />
     <ClInclude Include="ChatManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\common\CommonLib\CommonLib.vcxproj">
+      <Project>{7fa99392-85ff-4b29-a714-801b6150a2d8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientNetLib\ClientNetLib.vcxproj">
+      <Project>{1a6da99f-d0c1-4c0a-a12b-07a264a1588e}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

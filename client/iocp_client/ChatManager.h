@@ -1,37 +1,54 @@
 #pragma once
 #include "Define.h"
-#include "../common/ErrorCode.h"
-#include "../common/Packet.h"
+#include "TcpNetwork.h"
+#include "ErrorCode.h"
+#include "Packet.h"
 #include "PacketBufferManager.h"
-#include "ClientNetwork.h"
 #include "UserInfo.h"
 
+#include <iostream>
+using namespace std;
+
 //채팅 앱의 기능 관련 컨트롤러
-class ChatManager : public ClientNetwork {
+class ChatManager : public ClientNetLib::TcpNetwork {
 private:
 	UserInfo userInfo;
 	unique_ptr<PacketBufferManager> packetBufferManager;
 
 public:
-	bool Init(UINT16 SERVER_PORT, const char* SERVER_IP) {
+	bool Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		packetBufferManager = make_unique<PacketBufferManager>();
 		packetBufferManager->Init();
-		return ClientNetwork::Init(SERVER_PORT, SERVER_IP);
+		return TcpNetwork::Init(SERVER_PORT, SERVER_IP);
 	}
 
 	void Start() {
 		packetBufferManager->Start();
-		ClientNetwork::Start();
+		TcpNetwork::Start();
 	}
 
 	void End() {
 		packetBufferManager->End();
-		ClientNetwork::End();
+		TcpNetwork::End();
 	}
 
-	void OnReceive(char* data, UINT16 size) {
-		//printf("[RECV] size: %d\n", size);
-		packetBufferManager->OnDataReceive(data, size);
+	void OnReceive(char* data, UINT16 size, bool errflag, UINT32 err) {
+		if (errflag) {
+			printf("서버 통신이 종료됨\n");
+			printf("종료: /exit\n");
+		}
+		else {
+			printf("[RECV] size: %d\n", size);
+			packetBufferManager->OnDataReceive(data, size);
+		}
+	}
+	void OnSend(char* data, UINT16 size, bool errflag, UINT32 err) {
+		if (errflag) {
+			printf("error: %d\n", err);
+		}
+		else {
+			printf("[SEND] size: %d\n", size);
+		}
 	}
 
 	bool Login(char* name) {
@@ -77,7 +94,6 @@ public:
 		chatPkt.packetSize = sizeof(ChatRequestPacket);
 		CopyMemory(chatPkt.msg, msg.c_str(), msg.length());
 		return SendData((char*)&chatPkt, sizeof(ChatRequestPacket));
-		return true;
 	}
 
 };

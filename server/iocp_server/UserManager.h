@@ -1,9 +1,12 @@
 #pragma once
 
 #include "User.h"
+
 #include <vector>
 #include <unordered_map>
 #include <mutex>
+#include <iostream>
+using namespace std;
 
 class UserManager {
 private:

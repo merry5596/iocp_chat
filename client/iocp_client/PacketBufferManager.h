@@ -1,10 +1,12 @@
 #pragma once
-#include "Define.h"
-#include "../common/Packet.h"
+
+#include "Packet.h"
 #include "UserInfo.h"
 
 #include <thread>
 #include <mutex>
+#include <iostream>
+using namespace std;
 
 const UINT16 PACKET_BUFFER_SIZE = 8096;
 

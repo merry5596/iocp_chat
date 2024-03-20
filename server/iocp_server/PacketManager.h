@@ -2,6 +2,7 @@
 
 #include "Define.h"
 #include "Packet.h"
+#include "ErrorCode.h"
 #include "UserManager.h"
 
 #include <thread>
@@ -9,7 +10,8 @@
 #include <mutex>
 #include <functional>
 #include <unordered_map>
-
+#include <iostream>
+using namespace std;
 
 class UserManager;
 class PacketManager {

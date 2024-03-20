@@ -1,32 +1,18 @@
-#pragma once
-#pragma comment(lib, "ws2_32")
+﻿#include "IOCPNetwork.h"
 
-#include "Client.h"
-#include <vector>
-#include <thread>
+namespace ServerNetLib {
 
-class IOCPServer {
-private:
-	HANDLE IOCPHandle;
-	SOCKET listenSocket;
-	vector<Client*> clientPool;
-
-	thread accepterThread;
-	vector<thread> workerThreadPool;
-	bool isAccepterRun;
-	bool isWorkerRun;
-public:
-	~IOCPServer() {
+	IOCPNetwork::~IOCPNetwork() {
 		WSACleanup();
 		for (auto client : clientPool) {
 			delete client;
 		}
 	}
 
-	int IOCPInit(UINT16 SERVER_PORT, UINT16 CLIENTPOOL_SIZE) {
+	bool IOCPNetwork::IOCPInit(UINT16 SERVER_PORT, UINT16 CLIENTPOOL_SIZE) {
 		//Winsock 사용
 		WSAData wsaData;
-		auto ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
+		int ret = WSAStartup(MAKEWORD(2, 2), &wsaData);	//2.2 버전으로 초기화, wsaData에 저장
 		if (ret != 0) {
 			printf("[ERROR]WSAStartup() error: %d", WSAGetLastError());
 			return false;
@@ -44,15 +30,15 @@ public:
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(SERVER_PORT);
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		ret = bind(listenSocket, (SOCKADDR*)&addr, sizeof(SOCKADDR_IN));
-		if (ret != 0) {	//실패
+		ret = bind(listenSocket, (const SOCKADDR*)&addr, (int)sizeof(SOCKADDR_IN));
+		if (ret != 0) {
 			printf("[ERROR]bind() error: %d", WSAGetLastError());
 			return false;
 		}
 
 		//리슨 소켓 등록
 		ret = listen(listenSocket, 5);	//backlog(접속대기큐): 5
-		if (ret != 0) {	//실패
+		if (ret != 0) {
 			printf("[ERROR]listen() error: %d", WSAGetLastError());
 			return false;
 		}
@@ -63,7 +49,7 @@ public:
 			printf("[ERROR]CreateIoCompletionPort()(create) error: %d", WSAGetLastError());
 		}
 
-		//IOCP 핸들러에 등록(GQCS 받겠다)
+		//IOCP 핸들러에 소켓 등록(GQCS 받겠다)
 		HANDLE retHandle = CreateIoCompletionPort((HANDLE)listenSocket, IOCPHandle, 0, 0);
 		if (retHandle == NULL) {
 			printf("[ERROR]CreateIoCompletionPort()(bind listener) error: %d", WSAGetLastError());
@@ -75,8 +61,8 @@ public:
 		return true;
 	}
 
-	void IOCPStart() {
-		//Receive 스레드 시작
+	void IOCPNetwork::IOCPStart() {
+		//Worker 스레드 시작
 		isWorkerRun = true;
 		for (int i = 0; i < THREADPOOL_SIZE; i++) {
 			workerThreadPool.emplace_back([this]() { WorkerThread(); });
@@ -87,7 +73,7 @@ public:
 		accepterThread = thread([this]() { AccepterThread(); });
 	}
 
-	void IOCPEnd() {
+	void IOCPNetwork::IOCPEnd() {
 		isWorkerRun = false;
 		CloseHandle(IOCPHandle);
 		for (auto& workerThread : workerThreadPool) {
@@ -101,26 +87,19 @@ public:
 		if (accepterThread.joinable()) {
 			accepterThread.join();
 		}
-
 	}
 
-	void SendData(UINT32 clientIndex, char* data, UINT16 size) {
+	void IOCPNetwork::SendData(UINT32 clientIndex, char* data, UINT16 size) {
 		clientPool[clientIndex]->SendData(data, size);
 	}
 
-	virtual void OnConnect(UINT32 clientIndex) {}
-	virtual void OnReceive(UINT32 clientIndex, char* data, UINT16 size) {}
-	virtual void OnSend(UINT32 clientIndex, UINT16 size) {}
-	virtual void OnDisconnect(UINT32 clientIndex) {}
-
-private:
-	void CreateClientPool(UINT16 CLIENTPOOL_SIZE) {
+	void IOCPNetwork::CreateClientPool(UINT16 CLIENTPOOL_SIZE) {
 		for (int i = 0; i < CLIENTPOOL_SIZE; i++) {
-			clientPool.push_back(new Client(i));
+			clientPool.push_back(new ClientConnection(i));
 		}
 	}
 
-	void AccepterThread() {
+	void IOCPNetwork::AccepterThread() {
 		while (isAccepterRun) {
 			for (auto client : clientPool) {
 				if (client->GetStatus() == (UINT16)CONNECTION_STATUS::READY) {
@@ -131,20 +110,16 @@ private:
 		}
 	}
 
-	void WorkerThread() {
+	void IOCPNetwork::WorkerThread() {
 		DWORD recvBytes = 0;
-		Client* client = nullptr;
+		ClientConnection* client = nullptr;
 		LPOVERLAPPED lpOverlapped = nullptr;
 		while (isWorkerRun) {
 			bool ret = GetQueuedCompletionStatus(IOCPHandle, &recvBytes, (PULONG_PTR)&client, &lpOverlapped, INFINITE);
-
-			//IOCPHandle Close 되면 ret == false, lpOverlapped = NULL 반환
-			if (lpOverlapped == NULL) {
+			if (lpOverlapped == NULL) {	//IOCPHandle Close 되면 ret == false, lpOverlapped = NULL 반환
 				continue;
 			}
-
-			//연결 끊김
-			if (ret == false) {
+			if (ret == false) {	//연결 끊김
 				client->CloseSocket();
 				OnDisconnect(client->GetIndex());
 				continue;
@@ -173,4 +148,5 @@ private:
 			}
 		}
 	}
-};
+
+}

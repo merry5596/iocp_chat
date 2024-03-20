@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\iocp\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\iocp\server\ServerNetLib;C:\iocp\common\CommonLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,12 +128,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\common\ErrorCode.h" />
-    <ClInclude Include="..\common\Packet.h" />
-    <ClInclude Include="Client.h" />
-    <ClInclude Include="Define.h" />
-    <ClInclude Include="EchoServer.h" />
-    <ClInclude Include="IOCPServer.h" />
+    <ClInclude Include="ChatServer.h" />
     <ClInclude Include="PacketManager.h" />
     <ClInclude Include="User.h" />
     <ClInclude Include="UserManager.h" />
@@ -141,6 +136,14 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PacketManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\common\CommonLib\CommonLib.vcxproj">
+      <Project>{7fa99392-85ff-4b29-a714-801b6150a2d8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\ServerNetLib\ServerNetLib.vcxproj">
+      <Project>{d1c401d5-7aa7-46a4-81bf-45b755e32aad}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
