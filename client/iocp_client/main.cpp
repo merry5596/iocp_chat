@@ -35,10 +35,19 @@ int main(void) {
 		ret = chatManager.Login(name);
 	} while (ret == false);
 
+	UINT16 roomNum;
+	cout << "입장할 방 번호(랜덤 입장은 0): " << endl;
+	cin.ignore();
+	cin >> roomNum;
+	ret = chatManager.EnterRoom(roomNum);
+	while (ret == false) {
+		cin.ignore();
+		cin >> roomNum;
+		ret = chatManager.EnterRoom(roomNum);
+	}
 
 	string msg;
 	cout << "채팅 시작(종료는 /exit)" << endl;
-
 	cin.ignore();	//버퍼 비우기
 	getline(cin, msg);
 	while (msg != "/exit") {

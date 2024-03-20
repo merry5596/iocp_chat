@@ -61,7 +61,7 @@ public:
 		}
 	
 		auto result = packetBufferManager->GetLoginResponse();	//Login Response가 오면 그 결과를 반환한다.
-		if (result == ERROR_CODE::ALREADY_EXIST_NAME) {	//TODO error code 클래스
+		if (result == ERROR_CODE::ALREADY_EXIST_NAME) {
 			cout << "이미 존재하는 닉네임입니다." << endl;
 			return false;
 		}
@@ -72,16 +72,42 @@ public:
 		return true;
 	}
 
+	bool EnterRoom(UINT16 roomNum) {
+		RoomEnterRequestPacket roomEnterPkt;
+		roomEnterPkt.packetID = (UINT16)PACKET_ID::ROOM_ENTER_REQUEST;
+		roomEnterPkt.packetSize = sizeof(RoomEnterRequestPacket);
+		roomEnterPkt.roomNum = roomNum;
+
+		if (SendData((char*)&roomEnterPkt, sizeof(RoomEnterRequestPacket)) == false) {
+			return false;
+		}
+
+		auto result = packetBufferManager->GetRoomEnterResponse();
+		if (result == ERROR_CODE::INVALID_ROOM_NUM) {
+			cout << "없는 방 번호입니다." << endl;
+			return false;
+		}
+		if (result == ERROR_CODE::ROOM_FULL) {
+			cout << "해당 방은 인원이 모두 찼습니다." << endl;
+			return false;
+		}
+
+		userInfo.EnterRoom(roomNum);
+		cout << roomNum << "번 방 입장 성공" << endl;
+
+		return true;
+	}
+
 	bool EchoMsg(string msg) {
 		if (msg.length() >= ECHO_MSG_LEN) {
 			cout << "메시지가 너무 깁니다." << endl;
 			return false;
 		}
-		EchoPacket echoPkt;
-		echoPkt.packetID = (UINT16)PACKET_ID::ECHO;
-		echoPkt.packetSize = sizeof(EchoPacket);
+		EchoRequestPacket echoPkt;
+		echoPkt.packetID = (UINT16)PACKET_ID::ECHO_REQUEST;
+		echoPkt.packetSize = sizeof(EchoRequestPacket);
 		CopyMemory(echoPkt.msg, msg.c_str(), msg.length());
-		return SendData((char*)&echoPkt, sizeof(EchoPacket));
+		return SendData((char*)&echoPkt, sizeof(EchoRequestPacket));
 	}
 
 	bool ChatMsg(string msg) {

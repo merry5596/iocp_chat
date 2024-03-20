@@ -5,14 +5,14 @@
 enum class USER_STATE : UINT16 {
 	NONE = 0,
 	LOGIN = 1,
-	//ROOM = 2,
+	ROOM = 2,
 };
 
 class UserInfo {
 private:
 	UINT16 state;
 	char name[NAME_LEN];
-	//UINT16 roomNum;
+	UINT16 roomNum;
 
 public:
 	UserInfo() : state((UINT16)USER_STATE::NONE) {
@@ -26,10 +26,15 @@ public:
 		this->state = (UINT16)USER_STATE::LOGIN;
 	}
 
-//	void EnterRoom(UINT16 roomNum) {
-//		this->roomNum = roomNum;
-//		this->state = USER_STATE::ROOM;
-//	}
+	void EnterRoom(UINT16 roomNum) {
+		this->roomNum = roomNum;
+		this->state = (UINT16)USER_STATE::ROOM;
+	}
+
+	void LeaveRoom() {
+		this->roomNum = 0;
+		this->state = (UINT16)USER_STATE::LOGIN;
+	}
 
 	//Getters
 	UINT16 GetState() const { return state; }

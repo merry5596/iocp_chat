@@ -1,10 +1,12 @@
 #pragma once
 
+#include "ErrorCode.h"
 #include "Packet.h"
 #include "UserInfo.h"
 
 #include <thread>
 #include <mutex>
+#include <unordered_map>
 #include <iostream>
 using namespace std;
 
@@ -21,12 +23,25 @@ private:
 	thread packetThread;
 	bool isPacketRun;
 
-	ResponsePacket* loginResPkt;
+	LoginResponsePacket* loginResPkt;
+	RoomEnterResponsePacket* roomEnterResPkt;
+
+	typedef void (PacketBufferManager::* ProcessFunction)(char*);
+	unordered_map<UINT16, ProcessFunction> processFuncDic;
 public:
 	void Init() {
 		writePos = 0;
 		readPos = 0;
 		loginResPkt = nullptr;
+		roomEnterResPkt = nullptr;
+
+		processFuncDic = unordered_map<UINT16, ProcessFunction>();
+		processFuncDic[(UINT16)PACKET_ID::LOGIN_RESPONSE] = &PacketBufferManager::ProcessLoginResponse;
+		processFuncDic[(UINT16)PACKET_ID::ROOM_ENTER_RESPONSE] = &PacketBufferManager::ProcessRoomEnterResponse;
+		processFuncDic[(UINT16)PACKET_ID::ECHO_RESPONSE] = &PacketBufferManager::ProcessEchoResponse;
+		processFuncDic[(UINT16)PACKET_ID::CHAT_RESPONSE] = &PacketBufferManager::ProcessChatResponse;
+		processFuncDic[(UINT16)PACKET_ID::CHAT_NOTIFY] = &PacketBufferManager::ProcessChatNotify;
+
 	}
 
 	void Start() {
@@ -51,6 +66,17 @@ public:
 			if (loginResPkt != nullptr) {
 				auto result = loginResPkt->result;
 				loginResPkt = nullptr;
+				return result;
+			}
+			this_thread::sleep_for(chrono::milliseconds(1));
+		}
+	}
+
+	UINT16 GetRoomEnterResponse() {
+		while (true) {
+			if (roomEnterResPkt != nullptr) {
+				auto result = roomEnterResPkt->result;
+				roomEnterResPkt = nullptr;
 				return result;
 			}
 			this_thread::sleep_for(chrono::milliseconds(1));
@@ -94,7 +120,7 @@ private:
 				return false;
 			}
 			header = (PACKET_HEADER*)&packetBuffer[readPos];
-			if (header->packetID < (UINT16)PACKET_ID::ECHO) {
+			if (header->packetID < (UINT16)PACKET_ID::LOGIN_RESPONSE) {
 				cout << "[ERROR]ProcessBuffer(): 응답 패킷이 아님.." << endl;
 				//return PacketInfo();
 				return false;
@@ -108,36 +134,58 @@ private:
 			pktStartPos = readPos;
 			readPos += header->packetSize;
 		}
-		
-		if (header->packetID == (UINT16)PACKET_ID::ECHO) {
-			EchoPacket* echoPkt = (EchoPacket*)&packetBuffer[pktStartPos];
+
+		auto iter = processFuncDic.find(header->packetID);
+		if (iter != processFuncDic.end())
+		{
+			(this->*(iter->second))(&packetBuffer[pktStartPos]);
+		}
+		/*
+		if (header->packetID == (UINT16)PACKET_ID::ECHO_RESPONSE) {
+			EchoResponsePacket* echoPkt = (EchoResponsePacket*)&packetBuffer[pktStartPos];
 			ProcessEchoPacket(echoPkt);
 		}
 		else if (header->packetID == (UINT16)PACKET_ID::CHAT_NOTIFY) {
 			ChatNotifyPacket* chatPkt = (ChatNotifyPacket*)&packetBuffer[pktStartPos];
 			ProcessChatPacket(chatPkt);
 		}
+		else if (header->packetID == (UINT16)PACKET_ID::ROOM_ENTER_RESPONSE) {
+
+		}
 		else {
 			ResponsePacket* resPkt = (ResponsePacket*)&packetBuffer[pktStartPos];
 			ProcessResponsePacket(resPkt);
-		}
+		}*/
 
 		//printf("읽기완료. writePos: %d, readPos: %d\n", writePos, readPos);
 		return true;
 	}
-	void ProcessChatPacket(ChatNotifyPacket* pkt) {
-		cout << pkt->sender << " : " << pkt->msg << endl;
+
+	void ProcessLoginResponse(char* pkt) {
+		LoginResponsePacket* resPkt = reinterpret_cast<LoginResponsePacket*>(pkt);
+		loginResPkt = resPkt;
 	}
 
-	void ProcessEchoPacket(EchoPacket* pkt) {
-		cout << "Server : " << pkt->msg << endl;;
+	void ProcessRoomEnterResponse(char* pkt) {
+		RoomEnterResponsePacket* resPkt = reinterpret_cast<RoomEnterResponsePacket*>(pkt);
+		roomEnterResPkt = resPkt;
 	}
 
-	void ProcessResponsePacket(ResponsePacket* pkt) {
-		if (pkt->packetID == (UINT16)PACKET_ID::LOGIN_RESPONSE) {	//로그인 응답
-			loginResPkt = pkt;
+	void ProcessEchoResponse(char* pkt) {
+		EchoResponsePacket* resPkt = reinterpret_cast<EchoResponsePacket*>(pkt);
+		cout << "Server : " << resPkt->msg << endl;;
+	}
+
+	void ProcessChatResponse(char* pkt) {
+		ChatResponsePacket* resPkt = reinterpret_cast<ChatResponsePacket*>(pkt);
+		if (resPkt->result != ERROR_CODE::NONE) {
+			cout << "ProcessChatResponse() Error: " << resPkt->result << endl;
 		}
 	}
 
+	void ProcessChatNotify(char* pkt) {
+		ChatNotifyPacket* ntfPkt = reinterpret_cast<ChatNotifyPacket*>(pkt);
+		cout << ntfPkt->sender << " : " << ntfPkt->msg << endl;
+	}
 
 };
