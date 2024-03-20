@@ -4,21 +4,34 @@
     <Filter Include="Common">
       <UniqueIdentifier>{e2fbe950-1d88-4405-ac38-528908e4583c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ChatLogic">
+      <UniqueIdentifier>{fb92bb93-08a1-406c-b3f9-f162ec843b7a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EchoServer.h" />
-    <ClInclude Include="UserManager.h" />
-    <ClInclude Include="User.h" />
-    <ClInclude Include="PacketManager.h" />
     <ClInclude Include="..\common\ErrorCode.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\common\Packet.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="ChatServer.h">
+      <Filter>ChatLogic</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketManager.h">
+      <Filter>ChatLogic</Filter>
+    </ClInclude>
+    <ClInclude Include="User.h">
+      <Filter>ChatLogic</Filter>
+    </ClInclude>
+    <ClInclude Include="UserManager.h">
+      <Filter>ChatLogic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PacketManager.cpp" />
+    <ClCompile Include="PacketManager.cpp">
+      <Filter>ChatLogic</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
