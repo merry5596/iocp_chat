@@ -21,6 +21,13 @@ public:
 	void EnterRoom(UINT32 clientIndex) {
 		//userList 추가
 		curUserCnt++;
+		cout << roomNum << "번 방 인원: " << curUserCnt << endl;
+	}
+
+	void LeaveRoom(UINT32 clientIndex) {
+		//userList 삭제
+		curUserCnt--;
+		cout << roomNum << "번 방 인원: " << curUserCnt << endl;
 	}
 
 	UINT16 GetCurUserCnt() const {

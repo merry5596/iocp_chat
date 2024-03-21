@@ -63,6 +63,14 @@ public:
 		userList[clientIndex]->EnterRoom(roomNum);
 	}
 
+	UINT16 LeaveRoom(UINT32 clientIndex) {
+		return userList[clientIndex]->LeaveRoom();
+	}
+
+	UINT16 GetUserState(UINT32 clientIndex) {
+		return userList[clientIndex]->GetState();
+	}
+
 	vector<UINT16> GetAllUserIndex() {
 		vector<UINT16> userIndexList;
 		for (auto &userPair : userDic) {

@@ -44,8 +44,19 @@ public:
 		this->state = (UINT16)USER_STATE::ROOM;
 	}
 
+	UINT16 LeaveRoom() {
+		UINT16 leaveRoomNum = roomNum;
+		this->roomNum = 0;
+		this->state = (UINT16)USER_STATE::LOGIN;
+		return leaveRoomNum;
+	}
+
 	char* GetName() {
 		return name;
+	}
+
+	UINT16 GetState() {
+		return state;
 	}
 
 	void SetPacket(char* data, UINT16 size) {

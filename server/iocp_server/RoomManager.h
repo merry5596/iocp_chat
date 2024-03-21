@@ -18,11 +18,14 @@ public:
 		for (int i = 1; i <= MAX_ROOM_CNT; i++) {
 			roomList[i] = new Room(i, MAX_ROOM_USER_CNT);
 		}
-		cout << "룸 다만듦\n";
 	}
 
 	void EnterRoom(UINT16 roomNum, UINT32 clientIndex) {
 		roomList[roomNum]->EnterRoom(clientIndex);
+	}
+
+	void LeaveRoom(UINT16 roomNum, UINT32 clientIndex) {
+		roomList[roomNum]->LeaveRoom(clientIndex);
 	}
 
 	UINT16 EnterRandomRoom(UINT32 clientIndex) {

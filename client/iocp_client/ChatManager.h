@@ -83,6 +83,10 @@ public:
 		}
 
 		auto result = packetBufferManager->GetRoomEnterResponse();
+		if (result == ERROR_CODE::USER_STATE_ERROR) {
+			cout << "입장할 수 없는 상태입니다." << endl;
+			return false;
+		}
 		if (result == ERROR_CODE::INVALID_ROOM_NUM) {
 			cout << "없는 방 번호입니다." << endl;
 			return false;
@@ -95,6 +99,25 @@ public:
 		userInfo.EnterRoom(roomNum);
 		cout << roomNum << "번 방 입장 성공" << endl;
 
+		return true;
+	}
+
+	bool LeaveRoom() {
+		RoomLeaveRequestPacket reqPkt;
+		reqPkt.packetID = (UINT16)PACKET_ID::ROOM_LEAVE_REQUEST;
+		reqPkt.packetSize = sizeof(RoomLeaveRequestPacket);
+
+		if (SendData((char*)&reqPkt, sizeof(RoomLeaveRequestPacket)) == false) {
+			return false;
+		}
+
+		auto result = packetBufferManager->GetRoomLeaveResponse();
+		if (result == ERROR_CODE::USER_STATE_ERROR) {
+			cout << "퇴장할 수 없는 상태입니다." << endl;
+			return false;
+		}
+		userInfo.LeaveRoom();
+		cout << "방을 퇴장합니다." << endl;
 		return true;
 	}
 

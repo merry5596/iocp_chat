@@ -25,6 +25,7 @@ private:
 
 	LoginResponsePacket* loginResPkt;
 	RoomEnterResponsePacket* roomEnterResPkt;
+	RoomLeaveResponsePacket* roomLeaveResPkt;
 
 	typedef void (PacketBufferManager::* ProcessFunction)(char*);
 	unordered_map<UINT16, ProcessFunction> processFuncDic;
@@ -38,6 +39,7 @@ public:
 		processFuncDic = unordered_map<UINT16, ProcessFunction>();
 		processFuncDic[(UINT16)PACKET_ID::LOGIN_RESPONSE] = &PacketBufferManager::ProcessLoginResponse;
 		processFuncDic[(UINT16)PACKET_ID::ROOM_ENTER_RESPONSE] = &PacketBufferManager::ProcessRoomEnterResponse;
+		processFuncDic[(UINT16)PACKET_ID::ROOM_LEAVE_RESPONSE] = &PacketBufferManager::ProcessRoomLeaveResponse;
 		processFuncDic[(UINT16)PACKET_ID::ECHO_RESPONSE] = &PacketBufferManager::ProcessEchoResponse;
 		processFuncDic[(UINT16)PACKET_ID::CHAT_RESPONSE] = &PacketBufferManager::ProcessChatResponse;
 		processFuncDic[(UINT16)PACKET_ID::CHAT_NOTIFY] = &PacketBufferManager::ProcessChatNotify;
@@ -77,6 +79,17 @@ public:
 			if (roomEnterResPkt != nullptr) {
 				auto result = roomEnterResPkt->result;
 				roomEnterResPkt = nullptr;
+				return result;
+			}
+			this_thread::sleep_for(chrono::milliseconds(1));
+		}
+	}
+
+	UINT16 GetRoomLeaveResponse() {
+		while (true) {
+			if (roomLeaveResPkt != nullptr) {
+				auto result = roomLeaveResPkt->result;
+				roomLeaveResPkt = nullptr;
 				return result;
 			}
 			this_thread::sleep_for(chrono::milliseconds(1));
@@ -169,6 +182,11 @@ private:
 	void ProcessRoomEnterResponse(char* pkt) {
 		RoomEnterResponsePacket* resPkt = reinterpret_cast<RoomEnterResponsePacket*>(pkt);
 		roomEnterResPkt = resPkt;
+	}
+
+	void ProcessRoomLeaveResponse(char* pkt) {
+		RoomLeaveResponsePacket* resPkt = reinterpret_cast<RoomLeaveResponsePacket*>(pkt);
+		roomLeaveResPkt = resPkt;
 	}
 
 	void ProcessEchoResponse(char* pkt) {

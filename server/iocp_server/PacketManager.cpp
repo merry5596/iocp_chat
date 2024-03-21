@@ -16,6 +16,7 @@ void PacketManager::Init(const UINT16 CLIENTPOOL_SIZE) {
 	processFuncDic[(UINT16)PACKET_ID::ECHO_REQUEST] = &PacketManager::ProcessEchoRequest;
 	processFuncDic[(UINT16)PACKET_ID::LOGIN_REQUEST] = &PacketManager::ProcessLoginRequest;
 	processFuncDic[(UINT16)PACKET_ID::ROOM_ENTER_REQUEST] = &PacketManager::ProcessRoomEnterRequest;
+	processFuncDic[(UINT16)PACKET_ID::ROOM_LEAVE_REQUEST] = &PacketManager::ProcessRoomLeaveRequest;
 	processFuncDic[(UINT16)PACKET_ID::CHAT_REQUEST] = &PacketManager::ProcessChatRequest;
 }
 
@@ -118,8 +119,12 @@ void PacketManager::ProcessRoomEnterRequest(UINT16 clientIndex, char* data, UINT
 	resPkt.packetID = (UINT16)PACKET_ID::ROOM_ENTER_RESPONSE;
 	resPkt.packetSize = sizeof(RoomEnterResponsePacket);
 
+	//방 입장 가능한 상태?
+	if (userManager->GetUserState(clientIndex) != (UINT16)USER_STATE::LOGIN) {
+		resPkt.result = ERROR_CODE::USER_STATE_ERROR;
+	}
 	//랜덤
-	if (reqPkt->roomNum == 0) {
+	else if (reqPkt->roomNum == 0) {
 		UINT16 roomNum = roomManager->EnterRandomRoom(clientIndex);
 		if (roomNum == 0) {
 			resPkt.result = ERROR_CODE::NO_EMPTY_ROOM;
@@ -149,6 +154,27 @@ void PacketManager::ProcessRoomEnterRequest(UINT16 clientIndex, char* data, UINT
 
 	cout << "[ROOM ENTER RES]" << endl;
 	SendData(clientIndex, (char*)&resPkt, sizeof(RoomEnterResponsePacket));
+}
+
+
+void PacketManager::ProcessRoomLeaveRequest(UINT16 clientIndex, char* data, UINT16 size) {
+	auto reqPkt = reinterpret_cast<RoomLeaveRequestPacket*>(data);
+
+	RoomLeaveResponsePacket resPkt;
+	resPkt.packetID = (UINT16)PACKET_ID::ROOM_LEAVE_RESPONSE;
+	resPkt.packetSize = sizeof(RoomLeaveResponsePacket);
+
+	//방 입장 가능한 상태?
+	if (userManager->GetUserState(clientIndex) != (UINT16)USER_STATE::ROOM) {
+		resPkt.result = ERROR_CODE::USER_STATE_ERROR;
+	}
+
+	UINT16 roomNum = userManager->LeaveRoom(clientIndex);
+	roomManager->LeaveRoom(roomNum, clientIndex);
+	resPkt.result = ERROR_CODE::NONE;
+
+	cout << "[ROOM LEAVE RES]" << endl;
+	SendData(clientIndex, (char*)&resPkt, sizeof(RoomLeaveResponsePacket));
 }
 
 

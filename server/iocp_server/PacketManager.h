@@ -46,6 +46,7 @@ private:
 	void ProcessEchoRequest(UINT16 clientIndex, char* data, UINT16 size);
 	void ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 size);
 	void ProcessRoomEnterRequest(UINT16 clientIndex, char* data, UINT16 size);
+	void ProcessRoomLeaveRequest(UINT16 clientIndex, char* data, UINT16 size);
 	void ProcessChatRequest(UINT16 clientIndex, char* data, UINT16 size);
 };
 
