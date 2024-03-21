@@ -4,6 +4,7 @@
 #include "Packet.h"
 #include "ErrorCode.h"
 #include "UserManager.h"
+#include "RoomManager.h"
 
 #include <thread>
 #include <queue>
@@ -22,6 +23,7 @@ private:
 	queue<UINT32> clientQueue;
 	mutex mtx;
 	UserManager* userManager;
+	RoomManager* roomManager;
 	
 	typedef void (PacketManager::*ProcessFunction)(UINT16, char*, UINT16);
 	unordered_map<UINT16, ProcessFunction> processFuncDic;

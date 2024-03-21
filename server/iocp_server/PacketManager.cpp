@@ -9,6 +9,9 @@ void PacketManager::Init(const UINT16 CLIENTPOOL_SIZE) {
 	userManager = new UserManager;
 	userManager->Init(CLIENTPOOL_SIZE);
 
+	roomManager = new RoomManager;
+	roomManager->Init();
+
 	processFuncDic = unordered_map<UINT16, ProcessFunction>();
 	processFuncDic[(UINT16)PACKET_ID::ECHO_REQUEST] = &PacketManager::ProcessEchoRequest;
 	processFuncDic[(UINT16)PACKET_ID::LOGIN_REQUEST] = &PacketManager::ProcessLoginRequest;
@@ -115,28 +118,30 @@ void PacketManager::ProcessRoomEnterRequest(UINT16 clientIndex, char* data, UINT
 	resPkt.packetID = (UINT16)PACKET_ID::ROOM_ENTER_RESPONSE;
 	resPkt.packetSize = sizeof(RoomEnterResponsePacket);
 
-	//랜덤을 원한다면 (좀따구현)
+	//랜덤
 	if (reqPkt->roomNum == 0) {
-		//UINT16 roomNum = roomManager.EnterRandomRoom();
-		//if (roomNum == 0) {
-		//	resPkt.result == ERROR_CODE::NO_EMPTY_ROOM;
-		//}
-		//else {
-		//	resPkt.roomNum = roomNum;
-		//	resPkt.result == ERROR_CODE::NONE;
-		//}
+		UINT16 roomNum = roomManager->EnterRandomRoom(clientIndex);
+		if (roomNum == 0) {
+			resPkt.result = ERROR_CODE::NO_EMPTY_ROOM;
+		}
+		else {
+			userManager->EnterRoom(clientIndex, roomNum);
+
+			resPkt.roomNum = roomNum;
+			resPkt.result = ERROR_CODE::NONE;
+		}
 	}
 	//해당 방이 있는지
-	else if (false) {	
+	else if (roomManager->GetRoom(reqPkt->roomNum) == nullptr) {
 		resPkt.result = ERROR_CODE::INVALID_ROOM_NUM;
 	}
 	//방이 꽉 차지 않았는지
-	else if (false) {
+	else if (roomManager->IsFull(reqPkt->roomNum)) {
 		resPkt.result = ERROR_CODE::ROOM_FULL;
 	}
 	else {	//문제없음
+		roomManager->EnterRoom(reqPkt->roomNum, clientIndex);
 		userManager->EnterRoom(clientIndex, reqPkt->roomNum);
-		//roomManager->EnterRoom(clientIndex);
 
 		resPkt.roomNum = reqPkt->roomNum;
 		resPkt.result = ERROR_CODE::NONE;
