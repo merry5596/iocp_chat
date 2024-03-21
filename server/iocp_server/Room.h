@@ -36,4 +36,8 @@ public:
 	bool IsFull() const {
 		return (curUserCnt == maxUserCnt) ? true : false;
 	}
+
+	unordered_set<UINT32> GetAllUserIndex() {
+		return userDic;
+	}
 };

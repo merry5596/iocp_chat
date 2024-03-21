@@ -74,4 +74,8 @@ public:
 	bool IsFull(UINT16 roomNum) {
 		return roomList[roomNum]->IsFull();
 	}
+
+	unordered_set<UINT32> GetAllUserIndex(UINT16 roomNum) {
+		return roomList[roomNum]->GetAllUserIndex();
+	}
 };

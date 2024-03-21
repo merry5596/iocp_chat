@@ -67,6 +67,10 @@ public:
 		return userList[clientIndex]->LeaveRoom();
 	}
 
+	UINT16 GetRoomNum(UINT32 clientIndex) {
+		return userList[clientIndex]->GetRoomNum();
+	}
+
 	UINT16 GetUserState(UINT32 clientIndex) {
 		return userList[clientIndex]->GetState();
 	}

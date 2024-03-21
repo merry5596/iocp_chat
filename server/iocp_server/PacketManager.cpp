@@ -186,7 +186,10 @@ void PacketManager::ProcessChatRequest(UINT16 clientIndex, char* data, UINT16 si
 	ntfPkt.packetSize = sizeof(ChatNotifyPacket);
 	CopyMemory(ntfPkt.sender, userManager->GetUser(clientIndex)->GetName(), NAME_LEN);
 	CopyMemory(ntfPkt.msg, reqPkt->msg, CHAT_MSG_LEN);
-	for (auto receiverIndex : userManager->GetAllUserIndex()) {
+
+	UINT16 roomNum = userManager->GetRoomNum(clientIndex);
+	unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(roomNum);
+	for (auto receiverIndex : allUsers) {
 		if (receiverIndex != clientIndex) {
 			cout << "[CHAT NTF]" << endl;
 			SendData(receiverIndex, (char*)&ntfPkt, sizeof(ChatNotifyPacket));

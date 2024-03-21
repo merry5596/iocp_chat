@@ -51,6 +51,10 @@ public:
 		return leaveRoomNum;
 	}
 
+	UINT16 GetRoomNum() const {
+		return roomNum;
+	}
+
 	char* GetName() {
 		return name;
 	}
