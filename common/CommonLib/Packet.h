@@ -51,6 +51,7 @@ struct LoginRequestPacket : PACKET_HEADER {
 
 struct LoginResponsePacket : PACKET_HEADER {
 	UINT16 result;
+	char name[NAME_LEN];
 };
 
 struct RoomEnterRequestPacket : PACKET_HEADER {

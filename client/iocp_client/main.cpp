@@ -37,12 +37,13 @@ int main(void) {
 
 	//닉네임 설정(로그인)
 	string name;
+	UINT16 result;
 	do {
 		cout << "닉네임: ";
 		cin >> name;
 		cin.ignore();
-		ret = chatManager.Login(name.c_str());
-	} while (ret == false);
+		result = chatManager.Login(name.c_str());
+	} while (result != (UINT16)ERROR_CODE::NONE);
 
 	//방 입장
 	while (true)
@@ -69,8 +70,8 @@ int main(void) {
 			break;
 		}
 
-		ret = chatManager.EnterRoom(roomNum);
-		while (ret == false) {
+		result = chatManager.EnterRoom(roomNum);
+		if (result != (UINT16)ERROR_CODE::NONE) {
 			continue;
 		}
 

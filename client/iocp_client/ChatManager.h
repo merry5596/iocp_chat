@@ -12,7 +12,6 @@ using namespace std;
 //채팅 앱의 기능 관련 컨트롤러
 class ChatManager : public ClientNetLib::TcpNetwork {
 private:
-	UserInfo userInfo;
 	unique_ptr<PacketBufferManager> packetBufferManager;
 
 public:
@@ -57,20 +56,12 @@ public:
 		loginPkt.packetID = (UINT16)PACKET_ID::LOGIN_REQUEST;
 		loginPkt.packetSize = sizeof(LoginRequestPacket);
 		strcpy_s(loginPkt.name, strlen(name) + 1, name);
+
 		if (SendData((char*)&loginPkt, sizeof(LoginRequestPacket)) == false) {
 			return false;
 		}
-	
-		auto result = packetBufferManager->GetLoginResponse();	//Login Response가 오면 그 결과를 반환한다.
-		if (result == ERROR_CODE::ALREADY_EXIST_NAME) {
-			cout << "이미 존재하는 닉네임입니다." << endl;
-			return false;
-		}
-
-		userInfo.Login(name);
-		cout << "로그인 성공" << endl;
-
-		return true;
+		//결과 기다렸다가 반환
+		return packetBufferManager->GetLoginResult();
 	}
 
 	bool EnterRoom(UINT16 roomNum) {
@@ -82,25 +73,8 @@ public:
 		if (SendData((char*)&roomEnterPkt, sizeof(RoomEnterRequestPacket)) == false) {
 			return false;
 		}
-
-		auto result = packetBufferManager->GetRoomEnterResponse();
-		if (result == ERROR_CODE::USER_STATE_ERROR) {
-			cout << "입장할 수 없는 상태입니다." << endl;
-			return false;
-		}
-		if (result == ERROR_CODE::INVALID_ROOM_NUM) {
-			cout << "없는 방 번호입니다." << endl;
-			return false;
-		}
-		if (result == ERROR_CODE::ROOM_FULL) {
-			cout << "해당 방은 인원이 모두 찼습니다." << endl;
-			return false;
-		}
-
-		userInfo.EnterRoom(roomNum);
-		cout << roomNum << "번 방 입장 성공" << endl;
-
-		return true;
+		//결과 기다렸다가 반환
+		return packetBufferManager->GetRoomEnterResult();
 	}
 
 	bool LeaveRoom() {
@@ -111,15 +85,8 @@ public:
 		if (SendData((char*)&reqPkt, sizeof(RoomLeaveRequestPacket)) == false) {
 			return false;
 		}
-
-		auto result = packetBufferManager->GetRoomLeaveResponse();
-		if (result == ERROR_CODE::USER_STATE_ERROR) {
-			cout << "퇴장할 수 없는 상태입니다." << endl;
-			return false;
-		}
-		userInfo.LeaveRoom();
-		cout << "방을 퇴장합니다." << endl;
-		return true;
+		//결과 기다렸다가 반환
+		return packetBufferManager->GetRoomLeaveResult();
 	}
 
 	bool EchoMsg(const char* msg) {

@@ -105,7 +105,8 @@ void PacketManager::ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 s
 		resPkt.result = ERROR_CODE::ALREADY_EXIST_NAME;
 	}
 	else {	//문제없음
-		resPkt.result = ERROR_CODE::NONE;	//error 코드 추후에 작성
+		resPkt.result = ERROR_CODE::NONE;
+		strcpy_s(resPkt.name, strlen(reqPkt->name) + 1, reqPkt->name);
 	}
 
 	cout << "[LOGIN RES]" << endl;

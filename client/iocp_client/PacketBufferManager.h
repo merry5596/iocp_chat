@@ -22,10 +22,18 @@ private:
 
 	thread packetThread;
 	bool isPacketRun;
+	
+	UserInfo userInfo;
 
-	LoginResponsePacket* loginResPkt;
-	RoomEnterResponsePacket* roomEnterResPkt;
-	RoomLeaveResponsePacket* roomLeaveResPkt;
+	//응답패킷처리 완료시 플래그
+	bool isLoginResCompleted;
+	bool loginResult;
+
+	bool isRoomEnterResCompleted;
+	bool roomEnterResult;
+
+	bool isRoomLeaveResCompleted;
+	bool roomLeaveResult;
 
 	typedef void (PacketBufferManager::* ProcessFunction)(char*);
 	unordered_map<UINT16, ProcessFunction> processFuncDic;
@@ -33,8 +41,6 @@ public:
 	void Init() {
 		writePos = 0;
 		readPos = 0;
-		loginResPkt = nullptr;
-		roomEnterResPkt = nullptr;
 
 		processFuncDic = unordered_map<UINT16, ProcessFunction>();
 		processFuncDic[(UINT16)PACKET_ID::LOGIN_RESPONSE] = &PacketBufferManager::ProcessLoginResponse;
@@ -43,7 +49,6 @@ public:
 		processFuncDic[(UINT16)PACKET_ID::ECHO_RESPONSE] = &PacketBufferManager::ProcessEchoResponse;
 		processFuncDic[(UINT16)PACKET_ID::CHAT_RESPONSE] = &PacketBufferManager::ProcessChatResponse;
 		processFuncDic[(UINT16)PACKET_ID::CHAT_NOTIFY] = &PacketBufferManager::ProcessChatNotify;
-
 	}
 
 	void Start() {
@@ -63,34 +68,30 @@ public:
 		SetPacket(data, size);	//버퍼에 데이터를 넣는다.
 	}
 
-	UINT16 GetLoginResponse() {	//ChatManager::Login() 에서 호출
+	//응답 패킷 처리 완료 대기 함수들
+	bool GetLoginResult() {
 		while (true) {
-			if (loginResPkt != nullptr) {
-				auto result = loginResPkt->result;
-				loginResPkt = nullptr;
-				return result;
+			if (isLoginResCompleted) {
+				isLoginResCompleted = false;
+				return loginResult;
 			}
 			this_thread::sleep_for(chrono::milliseconds(1));
 		}
 	}
-
-	UINT16 GetRoomEnterResponse() {
+	bool GetRoomEnterResult() {
 		while (true) {
-			if (roomEnterResPkt != nullptr) {
-				auto result = roomEnterResPkt->result;
-				roomEnterResPkt = nullptr;
-				return result;
+			if (isRoomEnterResCompleted) {
+				isRoomEnterResCompleted = false;
+				return roomEnterResult;
 			}
 			this_thread::sleep_for(chrono::milliseconds(1));
 		}
 	}
-
-	UINT16 GetRoomLeaveResponse() {
+	bool GetRoomLeaveResult() {
 		while (true) {
-			if (roomLeaveResPkt != nullptr) {
-				auto result = roomLeaveResPkt->result;
-				roomLeaveResPkt = nullptr;
-				return result;
+			if (isRoomLeaveResCompleted) {
+				isRoomLeaveResCompleted = false;
+				return roomLeaveResult;
 			}
 			this_thread::sleep_for(chrono::milliseconds(1));
 		}
@@ -129,46 +130,28 @@ private:
 			auto noReadDataSize = writePos - readPos;
 			if (noReadDataSize < HEADER_SIZE) {	//헤더조차 다 안 온 상태
 				//cout << "[ERROR]헤더안옴" << endl;
-				//return PacketInfo();
 				return false;
 			}
 			header = (PACKET_HEADER*)&packetBuffer[readPos];
 			if (header->packetID < (UINT16)PACKET_ID::LOGIN_RESPONSE) {
-				cout << "[ERROR]ProcessBuffer(): 응답 패킷이 아님.." << endl;
-				//return PacketInfo();
+				cout << "[ERROR]ProcessBuffer(): 응답 패킷이 아님" << endl;
 				return false;
 			}
 
 			if (noReadDataSize < header->packetSize) {	//전체 패킷 덜 옴
 				//printf("body 덜옴. 와야할 패킷사이즈는 %d 인데, 읽고자 하는 버퍼 사이즈는 %d\n", header->packetSize, noReadDataSize);
-				//return PacketInfo();
 				return false;
 			}
 			pktStartPos = readPos;
 			readPos += header->packetSize;
 		}
 
+		//알맞는 처리함수 호출
 		auto iter = processFuncDic.find(header->packetID);
 		if (iter != processFuncDic.end())
 		{
 			(this->*(iter->second))(&packetBuffer[pktStartPos]);
 		}
-		/*
-		if (header->packetID == (UINT16)PACKET_ID::ECHO_RESPONSE) {
-			EchoResponsePacket* echoPkt = (EchoResponsePacket*)&packetBuffer[pktStartPos];
-			ProcessEchoPacket(echoPkt);
-		}
-		else if (header->packetID == (UINT16)PACKET_ID::CHAT_NOTIFY) {
-			ChatNotifyPacket* chatPkt = (ChatNotifyPacket*)&packetBuffer[pktStartPos];
-			ProcessChatPacket(chatPkt);
-		}
-		else if (header->packetID == (UINT16)PACKET_ID::ROOM_ENTER_RESPONSE) {
-
-		}
-		else {
-			ResponsePacket* resPkt = (ResponsePacket*)&packetBuffer[pktStartPos];
-			ProcessResponsePacket(resPkt);
-		}*/
 
 		//printf("읽기완료. writePos: %d, readPos: %d\n", writePos, readPos);
 		return true;
@@ -176,17 +159,49 @@ private:
 
 	void ProcessLoginResponse(char* pkt) {
 		LoginResponsePacket* resPkt = reinterpret_cast<LoginResponsePacket*>(pkt);
-		loginResPkt = resPkt;
+		if (resPkt->result == ERROR_CODE::ALREADY_EXIST_NAME) {
+			cout << "이미 존재하는 닉네임입니다." << endl;
+		}
+		if (resPkt->result == ERROR_CODE::NONE) {
+			userInfo.Login(resPkt->name);
+			cout << resPkt->name << "님 로그인 성공" << endl;
+		}
+
+		loginResult = resPkt->result;
+		isLoginResCompleted = true;
 	}
 
 	void ProcessRoomEnterResponse(char* pkt) {
 		RoomEnterResponsePacket* resPkt = reinterpret_cast<RoomEnterResponsePacket*>(pkt);
-		roomEnterResPkt = resPkt;
+		if (resPkt->result == ERROR_CODE::USER_STATE_ERROR) {
+			cout << "입장할 수 없는 상태입니다." << endl;
+		}
+		if (resPkt->result == ERROR_CODE::INVALID_ROOM_NUM) {
+			cout << "없는 방 번호입니다." << endl;
+		}
+		if (resPkt->result == ERROR_CODE::ROOM_FULL) {
+			cout << "해당 방은 인원이 모두 찼습니다." << endl;
+		}
+		if (resPkt->result == ERROR_CODE::NONE) {
+			userInfo.EnterRoom(resPkt->roomNum);
+			cout << resPkt->roomNum << "번 방 입장 성공" << endl;
+		}
+
+		roomEnterResult = resPkt->result;
+		isRoomEnterResCompleted = true;
 	}
 
 	void ProcessRoomLeaveResponse(char* pkt) {
 		RoomLeaveResponsePacket* resPkt = reinterpret_cast<RoomLeaveResponsePacket*>(pkt);
-		roomLeaveResPkt = resPkt;
+		if (resPkt->result == ERROR_CODE::USER_STATE_ERROR) {
+			cout << "퇴장할 수 없는 상태입니다." << endl;
+		}
+		if (resPkt->result == ERROR_CODE::NONE) {
+			userInfo.LeaveRoom();
+			cout << "방을 퇴장합니다." << endl;
+		}
+		roomLeaveResult = resPkt->result;
+		isRoomLeaveResCompleted = true;
 	}
 
 	void ProcessEchoResponse(char* pkt) {
@@ -205,5 +220,4 @@ private:
 		ChatNotifyPacket* ntfPkt = reinterpret_cast<ChatNotifyPacket*>(pkt);
 		cout << ntfPkt->sender << " : " << ntfPkt->msg << endl;
 	}
-
 };
