@@ -21,7 +21,7 @@ public:
 	}
 	~UserInfo() {}
 
-	void Login(char* name) {
+	void Login(const char* name) {
 		strcpy_s(this->name, NAME_LEN, name);
 		this->state = (UINT16)USER_STATE::LOGIN;
 	}

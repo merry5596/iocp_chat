@@ -42,6 +42,7 @@ public:
 			packetBufferManager->OnDataReceive(data, size);
 		}
 	}
+
 	void OnSend(char* data, UINT16 size, bool errflag, UINT32 err) {
 		if (errflag) {
 			printf("error: %d\n", err);
@@ -51,11 +52,11 @@ public:
 		}
 	}
 
-	bool Login(char* name) {
+	bool Login(const char* name) {
 		LoginRequestPacket loginPkt;
 		loginPkt.packetID = (UINT16)PACKET_ID::LOGIN_REQUEST;
 		loginPkt.packetSize = sizeof(LoginRequestPacket);
-		strcpy_s(loginPkt.name, NAME_LEN, name);
+		strcpy_s(loginPkt.name, strlen(name) + 1, name);
 		if (SendData((char*)&loginPkt, sizeof(LoginRequestPacket)) == false) {
 			return false;
 		}
@@ -121,27 +122,27 @@ public:
 		return true;
 	}
 
-	bool EchoMsg(string msg) {
-		if (msg.length() >= ECHO_MSG_LEN) {
+	bool EchoMsg(const char* msg) {
+		if (strlen(msg) >= ECHO_MSG_LEN) {
 			cout << "메시지가 너무 깁니다." << endl;
 			return false;
 		}
 		EchoRequestPacket echoPkt;
 		echoPkt.packetID = (UINT16)PACKET_ID::ECHO_REQUEST;
 		echoPkt.packetSize = sizeof(EchoRequestPacket);
-		CopyMemory(echoPkt.msg, msg.c_str(), msg.length());
+		CopyMemory(echoPkt.msg, msg, strlen(msg) + 1);
 		return SendData((char*)&echoPkt, sizeof(EchoRequestPacket));
 	}
 
-	bool ChatMsg(string msg) {
-		if (msg.length() >= CHAT_MSG_LEN) {
+	bool ChatMsg(const char* msg) {
+		if (strlen(msg) >- CHAT_MSG_LEN) {
 			cout << "메시지가 너무 깁니다." << endl;	//TODO: 쪼개서 보내기
 			return false;
 		}
 		ChatRequestPacket chatPkt;
 		chatPkt.packetID = (UINT16)PACKET_ID::CHAT_REQUEST;
 		chatPkt.packetSize = sizeof(ChatRequestPacket);
-		CopyMemory(chatPkt.msg, msg.c_str(), msg.length());
+		CopyMemory(chatPkt.msg, msg, strlen(msg) + 1);
 		return SendData((char*)&chatPkt, sizeof(ChatRequestPacket));
 	}
 
