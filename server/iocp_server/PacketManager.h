@@ -25,7 +25,7 @@ private:
 	UserManager* userManager;
 	RoomManager* roomManager;
 	
-	typedef void (PacketManager::*ProcessFunction)(UINT16, char*, UINT16);
+	typedef void (PacketManager::*ProcessFunction)(UINT32, char*, UINT16);
 	unordered_map<UINT16, ProcessFunction> processFuncDic;
 
 public:
@@ -41,12 +41,12 @@ private:
 	void EnqueueClient(UINT32 clientIndex);
 	UINT32 DequeueClient();
 	void ProcessPacket(PacketInfo pktInfo);
-	void ProcessConnect(UINT32 clientIndex);
-	void ProcessDisconnect(UINT32 clientIndex);
-	void ProcessEchoRequest(UINT16 clientIndex, char* data, UINT16 size);
-	void ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 size);
-	void ProcessRoomEnterRequest(UINT16 clientIndex, char* data, UINT16 size);
-	void ProcessRoomLeaveRequest(UINT16 clientIndex, char* data, UINT16 size);
-	void ProcessChatRequest(UINT16 clientIndex, char* data, UINT16 size);
+//	void ProcessConnect(UINT32 clientIndex);
+	void ProcessDisconnect(UINT32 clientIndex, char* data, UINT16 size);
+	void ProcessEchoRequest(UINT32 clientIndex, char* data, UINT16 size);
+	void ProcessLoginRequest(UINT32 clientIndex, char* data, UINT16 size);
+	void ProcessRoomEnterRequest(UINT32 clientIndex, char* data, UINT16 size);
+	void ProcessRoomLeaveRequest(UINT32 clientIndex, char* data, UINT16 size);
+	void ProcessChatRequest(UINT32 clientIndex, char* data, UINT16 size);
 };
 

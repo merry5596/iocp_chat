@@ -43,7 +43,7 @@ struct PACKET_HEADER {
 };
 const UINT16 HEADER_SIZE = sizeof(PACKET_HEADER);
 
-struct SystemPacket : PACKET_HEADER {};
+struct DisconnectPacket : PACKET_HEADER {};
 
 struct LoginRequestPacket : PACKET_HEADER {
 	char name[NAME_LEN];

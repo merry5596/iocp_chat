@@ -42,7 +42,7 @@ public:
 		return userList[clientIndex];
 	}
 
-	bool AddUser(char* name, UINT32 clientIndex) {
+	bool SetLogin(char* name, UINT32 clientIndex) {
 		if (IsExistingName(name)) {	//중복됨
 			return false;
 		}
@@ -53,7 +53,7 @@ public:
 		return true;
 	}
 
-	void DeleteUser(UINT32 clientIndex) {
+	void SetLogout(UINT32 clientIndex) {
 		userDic.erase(userList[clientIndex]->GetName());
 		userList[clientIndex]->SetLogout();
 		curUserCnt--;

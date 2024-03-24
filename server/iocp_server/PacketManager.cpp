@@ -18,6 +18,7 @@ void PacketManager::Init(const UINT16 CLIENTPOOL_SIZE) {
 	processFuncDic[(UINT16)PACKET_ID::ROOM_ENTER_REQUEST] = &PacketManager::ProcessRoomEnterRequest;
 	processFuncDic[(UINT16)PACKET_ID::ROOM_LEAVE_REQUEST] = &PacketManager::ProcessRoomLeaveRequest;
 	processFuncDic[(UINT16)PACKET_ID::CHAT_REQUEST] = &PacketManager::ProcessChatRequest;
+	processFuncDic[(UINT16)PACKET_ID::DISCONNECT] = &PacketManager::ProcessDisconnect;
 }
 
 void PacketManager::Start() {
@@ -39,10 +40,7 @@ void PacketManager::PacketThread() {
 		UINT32 clientIndex = DequeueClient();
 		if (clientIndex != -1) {
 			PacketInfo pktInfo = userManager->GetPacket(clientIndex);
-			if (pktInfo.packetID == (UINT16)PACKET_ID::DISCONNECT) {	//DISCONNECT
-				userManager->DeleteUser(clientIndex);
-			}
-			else if (pktInfo.packetID != 0) {
+			if (pktInfo.packetID != 0) {
 				ProcessPacket(pktInfo);
 				isIdle = false;
 			}
@@ -85,7 +83,7 @@ void PacketManager::ProcessPacket(PacketInfo pktInfo) {
 	}
 }
 
-void PacketManager::ProcessEchoRequest(UINT16 clientIndex, char* data, UINT16 size) {
+void PacketManager::ProcessEchoRequest(UINT32 clientIndex, char* data, UINT16 size) {
 	auto reqPkt = reinterpret_cast<EchoRequestPacket*>(data);
 	EchoResponsePacket resPkt;
 	resPkt.packetID = (UINT16)PACKET_ID::ECHO_RESPONSE;
@@ -94,14 +92,14 @@ void PacketManager::ProcessEchoRequest(UINT16 clientIndex, char* data, UINT16 si
 }
 
 
-void PacketManager::ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 size) {
+void PacketManager::ProcessLoginRequest(UINT32 clientIndex, char* data, UINT16 size) {
 	auto reqPkt = reinterpret_cast<LoginRequestPacket*>(data);
 
 	LoginResponsePacket resPkt;
 	resPkt.packetID = (UINT16)PACKET_ID::LOGIN_RESPONSE;
 	resPkt.packetSize = sizeof(LoginResponsePacket);
 	//닉네임 중복 검사
-	if (!userManager->AddUser(reqPkt->name, clientIndex)) {	//add 실패
+	if (!userManager->SetLogin(reqPkt->name, clientIndex)) {	//실패
 		resPkt.result = ERROR_CODE::ALREADY_EXIST_NAME;
 	}
 	else {	//문제없음
@@ -113,7 +111,7 @@ void PacketManager::ProcessLoginRequest(UINT16 clientIndex, char* data, UINT16 s
 	SendData(clientIndex, (char*)&resPkt, sizeof(LoginResponsePacket));
 }
 
-void PacketManager::ProcessRoomEnterRequest(UINT16 clientIndex, char* data, UINT16 size) {
+void PacketManager::ProcessRoomEnterRequest(UINT32 clientIndex, char* data, UINT16 size) {
 	auto reqPkt = reinterpret_cast<RoomEnterRequestPacket*>(data);
 
 	RoomEnterResponsePacket resPkt;
@@ -158,7 +156,7 @@ void PacketManager::ProcessRoomEnterRequest(UINT16 clientIndex, char* data, UINT
 }
 
 
-void PacketManager::ProcessRoomLeaveRequest(UINT16 clientIndex, char* data, UINT16 size) {
+void PacketManager::ProcessRoomLeaveRequest(UINT32 clientIndex, char* data, UINT16 size) {
 	auto reqPkt = reinterpret_cast<RoomLeaveRequestPacket*>(data);
 
 	RoomLeaveResponsePacket resPkt;
@@ -179,7 +177,7 @@ void PacketManager::ProcessRoomLeaveRequest(UINT16 clientIndex, char* data, UINT
 }
 
 
-void PacketManager::ProcessChatRequest(UINT16 clientIndex, char* data, UINT16 size) {
+void PacketManager::ProcessChatRequest(UINT32 clientIndex, char* data, UINT16 size) {
 	auto reqPkt = reinterpret_cast<ChatRequestPacket*>(data);
 
 	ChatNotifyPacket ntfPkt;
@@ -204,4 +202,12 @@ void PacketManager::ProcessChatRequest(UINT16 clientIndex, char* data, UINT16 si
 
 	cout << "[CHAT RES]" << endl;
 	SendData(clientIndex, (char*)&resPkt, sizeof(ChatResponsePacket));
+}
+
+void PacketManager::ProcessDisconnect(UINT32 clientIndex, char* data, UINT16 size) {
+	if (userManager->GetUserState(clientIndex) == (UINT16)USER_STATE::ROOM) {	//방에 있으면 방 나가기 처리 먼저
+		auto roomNum = userManager->LeaveRoom(clientIndex);
+		roomManager->LeaveRoom(roomNum, clientIndex);
+	}
+	userManager->SetLogout(clientIndex);
 }

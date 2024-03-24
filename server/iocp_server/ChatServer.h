@@ -41,9 +41,9 @@ public:
 
 	virtual void OnDisconnect(UINT32 clientIndex) {
 		printf("[CLOSE]client index:%d\n", clientIndex);
-		SystemPacket pkt;
+		DisconnectPacket pkt;
 		pkt.packetID = (UINT16)PACKET_ID::DISCONNECT;
-		pkt.packetSize = sizeof(SystemPacket);
-		packetManager->OnDataReceive(clientIndex, (char*)&pkt, sizeof(SystemPacket));
+		pkt.packetSize = sizeof(DisconnectPacket);
+		packetManager->OnDataReceive(clientIndex, (char*)&pkt, sizeof(DisconnectPacket));
 	}
 };

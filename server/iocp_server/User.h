@@ -37,6 +37,9 @@ public:
 	void SetLogout() {
 		ZeroMemory(name, NAME_LEN);
 		state = (UINT16)USER_STATE::NONE;
+		this->roomNum = 0;
+		writePos = 0;
+		readPos = 0;
 	}
 
 	void EnterRoom(UINT16 roomNum) {
