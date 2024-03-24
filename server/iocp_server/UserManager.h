@@ -42,7 +42,7 @@ public:
 		return userList[clientIndex];
 	}
 
-	bool AddUser(char* name, UINT32 clientIndex) {
+	bool SetLogin(char* name, UINT32 clientIndex) {
 		if (IsExistingName(name)) {	//중복됨
 			return false;
 		}
@@ -53,10 +53,26 @@ public:
 		return true;
 	}
 
-	void DeleteUser(UINT32 clientIndex) {
+	void SetLogout(UINT32 clientIndex) {
 		userDic.erase(userList[clientIndex]->GetName());
 		userList[clientIndex]->SetLogout();
 		curUserCnt--;
+	}
+
+	void EnterRoom(UINT32 clientIndex, UINT16 roomNum) {
+		userList[clientIndex]->EnterRoom(roomNum);
+	}
+
+	UINT16 LeaveRoom(UINT32 clientIndex) {
+		return userList[clientIndex]->LeaveRoom();
+	}
+
+	UINT16 GetRoomNum(UINT32 clientIndex) {
+		return userList[clientIndex]->GetRoomNum();
+	}
+
+	UINT16 GetUserState(UINT32 clientIndex) {
+		return userList[clientIndex]->GetState();
 	}
 
 	vector<UINT16> GetAllUserIndex() {

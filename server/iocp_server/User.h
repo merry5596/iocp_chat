@@ -11,6 +11,7 @@ const UINT16 PACKET_BUFFER_SIZE = 8096;
 enum class USER_STATE : UINT16 {
 	NONE = 0,
 	LOGIN = 1,
+	ROOM = 2,
 };
 
 class User {
@@ -18,6 +19,7 @@ private:
 	UINT32 clientIndex;
 	char name[NAME_LEN];
 	UINT16 state;
+	UINT16 roomNum;
 
 	char packetBuffer[PACKET_BUFFER_SIZE];
 	UINT16 writePos;
@@ -35,10 +37,33 @@ public:
 	void SetLogout() {
 		ZeroMemory(name, NAME_LEN);
 		state = (UINT16)USER_STATE::NONE;
+		this->roomNum = 0;
+		writePos = 0;
+		readPos = 0;
+	}
+
+	void EnterRoom(UINT16 roomNum) {
+		this->roomNum = roomNum;
+		this->state = (UINT16)USER_STATE::ROOM;
+	}
+
+	UINT16 LeaveRoom() {
+		UINT16 leaveRoomNum = roomNum;
+		this->roomNum = 0;
+		this->state = (UINT16)USER_STATE::LOGIN;
+		return leaveRoomNum;
+	}
+
+	UINT16 GetRoomNum() const {
+		return roomNum;
 	}
 
 	char* GetName() {
 		return name;
+	}
+
+	UINT16 GetState() {
+		return state;
 	}
 
 	void SetPacket(char* data, UINT16 size) {

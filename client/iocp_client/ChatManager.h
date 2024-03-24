@@ -12,7 +12,6 @@ using namespace std;
 //채팅 앱의 기능 관련 컨트롤러
 class ChatManager : public ClientNetLib::TcpNetwork {
 private:
-	UserInfo userInfo;
 	unique_ptr<PacketBufferManager> packetBufferManager;
 
 public:
@@ -42,6 +41,7 @@ public:
 			packetBufferManager->OnDataReceive(data, size);
 		}
 	}
+
 	void OnSend(char* data, UINT16 size, bool errflag, UINT32 err) {
 		if (errflag) {
 			printf("error: %d\n", err);
@@ -51,48 +51,65 @@ public:
 		}
 	}
 
-	bool Login(char* name) {
+	bool Login(const char* name) {
 		LoginRequestPacket loginPkt;
 		loginPkt.packetID = (UINT16)PACKET_ID::LOGIN_REQUEST;
 		loginPkt.packetSize = sizeof(LoginRequestPacket);
-		strcpy_s(loginPkt.name, NAME_LEN, name);
+		strcpy_s(loginPkt.name, strlen(name) + 1, name);
+
 		if (SendData((char*)&loginPkt, sizeof(LoginRequestPacket)) == false) {
 			return false;
 		}
-	
-		auto result = packetBufferManager->GetLoginResponse();	//Login Response가 오면 그 결과를 반환한다.
-		if (result == ERROR_CODE::ALREADY_EXIST_NAME) {	//TODO error code 클래스
-			cout << "이미 존재하는 닉네임입니다." << endl;
-			return false;
-		}
-
-		userInfo.Login(name);
-		cout << "로그인 성공" << endl;
-
-		return true;
+		//결과 기다렸다가 반환
+		return packetBufferManager->GetLoginResult();
 	}
 
-	bool EchoMsg(string msg) {
-		if (msg.length() >= ECHO_MSG_LEN) {
+	bool EnterRoom(UINT16 roomNum) {
+		RoomEnterRequestPacket roomEnterPkt;
+		roomEnterPkt.packetID = (UINT16)PACKET_ID::ROOM_ENTER_REQUEST;
+		roomEnterPkt.packetSize = sizeof(RoomEnterRequestPacket);
+		roomEnterPkt.roomNum = roomNum;
+
+		if (SendData((char*)&roomEnterPkt, sizeof(RoomEnterRequestPacket)) == false) {
+			return false;
+		}
+		//결과 기다렸다가 반환
+		return packetBufferManager->GetRoomEnterResult();
+	}
+
+	bool LeaveRoom() {
+		RoomLeaveRequestPacket reqPkt;
+		reqPkt.packetID = (UINT16)PACKET_ID::ROOM_LEAVE_REQUEST;
+		reqPkt.packetSize = sizeof(RoomLeaveRequestPacket);
+
+		if (SendData((char*)&reqPkt, sizeof(RoomLeaveRequestPacket)) == false) {
+			return false;
+		}
+		//결과 기다렸다가 반환
+		return packetBufferManager->GetRoomLeaveResult();
+	}
+
+	bool EchoMsg(const char* msg) {
+		if (strlen(msg) >= ECHO_MSG_LEN) {
 			cout << "메시지가 너무 깁니다." << endl;
 			return false;
 		}
-		EchoPacket echoPkt;
-		echoPkt.packetID = (UINT16)PACKET_ID::ECHO;
-		echoPkt.packetSize = sizeof(EchoPacket);
-		CopyMemory(echoPkt.msg, msg.c_str(), msg.length());
-		return SendData((char*)&echoPkt, sizeof(EchoPacket));
+		EchoRequestPacket echoPkt;
+		echoPkt.packetID = (UINT16)PACKET_ID::ECHO_REQUEST;
+		echoPkt.packetSize = sizeof(EchoRequestPacket);
+		CopyMemory(echoPkt.msg, msg, strlen(msg) + 1);
+		return SendData((char*)&echoPkt, sizeof(EchoRequestPacket));
 	}
 
-	bool ChatMsg(string msg) {
-		if (msg.length() >= CHAT_MSG_LEN) {
+	bool ChatMsg(const char* msg) {
+		if (strlen(msg) >- CHAT_MSG_LEN) {
 			cout << "메시지가 너무 깁니다." << endl;	//TODO: 쪼개서 보내기
 			return false;
 		}
 		ChatRequestPacket chatPkt;
 		chatPkt.packetID = (UINT16)PACKET_ID::CHAT_REQUEST;
 		chatPkt.packetSize = sizeof(ChatRequestPacket);
-		CopyMemory(chatPkt.msg, msg.c_str(), msg.length());
+		CopyMemory(chatPkt.msg, msg, strlen(msg) + 1);
 		return SendData((char*)&chatPkt, sizeof(ChatRequestPacket));
 	}
 
