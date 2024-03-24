@@ -151,6 +151,20 @@ void PacketManager::ProcessRoomEnterRequest(UINT32 clientIndex, char* data, UINT
 		resPkt.result = ERROR_CODE::NONE;
 	}
 
+	//Notify
+	RoomEnterNotifyPacket ntfPkt;
+	ntfPkt.packetID = (UINT16)PACKET_ID::ROOM_ENTER_NOTIFY;
+	ntfPkt.packetSize = sizeof(RoomEnterNotifyPacket);
+	strcpy_s(ntfPkt.name, NAME_LEN, userManager->GetUser(clientIndex)->GetName());
+
+	unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(resPkt.roomNum);
+	for (auto receiverIndex : allUsers) {
+		if (receiverIndex != clientIndex) {
+			cout << "[ROOM ENTER NTF]" << endl;
+			SendData(receiverIndex, (char*)&ntfPkt, sizeof(RoomEnterNotifyPacket));
+		}
+	}
+
 	cout << "[ROOM ENTER RES]" << endl;
 	SendData(clientIndex, (char*)&resPkt, sizeof(RoomEnterResponsePacket));
 }
@@ -172,6 +186,21 @@ void PacketManager::ProcessRoomLeaveRequest(UINT32 clientIndex, char* data, UINT
 	roomManager->LeaveRoom(roomNum, clientIndex);
 	resPkt.result = ERROR_CODE::NONE;
 
+	//Notify
+	RoomLeaveNotifyPacket ntfPkt;
+	ntfPkt.packetID = (UINT16)PACKET_ID::ROOM_LEAVE_NOTIFY;
+	ntfPkt.packetSize = sizeof(RoomLeaveNotifyPacket);
+	strcpy_s(ntfPkt.name, NAME_LEN, userManager->GetUser(clientIndex)->GetName());
+
+
+	unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(roomNum);
+	for (auto receiverIndex : allUsers) {
+		if (receiverIndex != clientIndex) {
+			cout << "[ROOM LEAVE NTF]" << endl;
+			SendData(receiverIndex, (char*)&ntfPkt, sizeof(RoomLeaveNotifyPacket));
+		}
+	}
+
 	cout << "[ROOM LEAVE RES]" << endl;
 	SendData(clientIndex, (char*)&resPkt, sizeof(RoomLeaveResponsePacket));
 }
@@ -180,11 +209,12 @@ void PacketManager::ProcessRoomLeaveRequest(UINT32 clientIndex, char* data, UINT
 void PacketManager::ProcessChatRequest(UINT32 clientIndex, char* data, UINT16 size) {
 	auto reqPkt = reinterpret_cast<ChatRequestPacket*>(data);
 
+	//Notify
 	ChatNotifyPacket ntfPkt;
 	ntfPkt.packetID = (UINT16)PACKET_ID::CHAT_NOTIFY;
 	ntfPkt.packetSize = sizeof(ChatNotifyPacket);
-	CopyMemory(ntfPkt.sender, userManager->GetUser(clientIndex)->GetName(), NAME_LEN);
-	CopyMemory(ntfPkt.msg, reqPkt->msg, CHAT_MSG_LEN);
+	strcpy_s(ntfPkt.name, NAME_LEN, userManager->GetUser(clientIndex)->GetName());
+	strcpy_s(ntfPkt.msg, CHAT_MSG_LEN, reqPkt->msg);
 
 	UINT16 roomNum = userManager->GetRoomNum(clientIndex);
 	unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(roomNum);

@@ -65,7 +65,6 @@ struct RoomEnterResponsePacket : PACKET_HEADER {
 
 struct RoomEnterNotifyPacket : PACKET_HEADER {
 	char name[NAME_LEN];
-	UINT16 roomNum;
 };
 
 struct RoomLeaveRequestPacket : PACKET_HEADER {};
@@ -76,7 +75,6 @@ struct RoomLeaveResponsePacket : PACKET_HEADER {
 
 struct RoomLeaveNotifyPacket : PACKET_HEADER {
 	char name[NAME_LEN];
-	UINT16 roomNum;
 };
 
 struct EchoRequestPacket : PACKET_HEADER {
@@ -96,7 +94,7 @@ struct ChatResponsePacket : PACKET_HEADER {
 };
 
 struct ChatNotifyPacket : PACKET_HEADER {
-	char sender[NAME_LEN];
+	char name[NAME_LEN];
 	char msg[CHAT_MSG_LEN];
 };
 

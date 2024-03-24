@@ -49,6 +49,8 @@ public:
 		processFuncDic[(UINT16)PACKET_ID::ECHO_RESPONSE] = &PacketBufferManager::ProcessEchoResponse;
 		processFuncDic[(UINT16)PACKET_ID::CHAT_RESPONSE] = &PacketBufferManager::ProcessChatResponse;
 		processFuncDic[(UINT16)PACKET_ID::CHAT_NOTIFY] = &PacketBufferManager::ProcessChatNotify;
+		processFuncDic[(UINT16)PACKET_ID::ROOM_ENTER_NOTIFY] = &PacketBufferManager::ProcessRoomEnterNotify;
+		processFuncDic[(UINT16)PACKET_ID::ROOM_LEAVE_NOTIFY] = &PacketBufferManager::ProcessRoomLeaveNotify;
 	}
 
 	void Start() {
@@ -184,7 +186,7 @@ private:
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
 			userInfo.EnterRoom(resPkt->roomNum);
-			cout << resPkt->roomNum << "번 방 입장 성공" << endl;
+			cout << resPkt->roomNum << "번 방에 입장합니다." << endl;
 		}
 
 		roomEnterResult = resPkt->result;
@@ -218,6 +220,16 @@ private:
 
 	void ProcessChatNotify(char* pkt) {
 		ChatNotifyPacket* ntfPkt = reinterpret_cast<ChatNotifyPacket*>(pkt);
-		cout << ntfPkt->sender << " : " << ntfPkt->msg << endl;
+		cout << ntfPkt->name << " : " << ntfPkt->msg << endl;
+	}
+
+	void ProcessRoomEnterNotify(char* pkt) {
+		RoomEnterNotifyPacket* ntfPkt = reinterpret_cast<RoomEnterNotifyPacket*>(pkt);
+		cout << ntfPkt->name << "님이 방에 입장하셨습니다." << endl;
+	}
+
+	void ProcessRoomLeaveNotify(char* pkt) {
+		RoomLeaveNotifyPacket* ntfPkt = reinterpret_cast<RoomLeaveNotifyPacket*>(pkt);
+		cout << ntfPkt->name << "님이 방에서 퇴장하셨습니다." << endl;
 	}
 };
