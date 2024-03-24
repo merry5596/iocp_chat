@@ -1,13 +1,12 @@
 #include "PacketManager.h"
 
-PacketManager::PacketManager() {}
 PacketManager::~PacketManager() {
 	delete userManager;
 }
 
-void PacketManager::Init(const UINT16 CLIENTPOOL_SIZE) {
+void PacketManager::Init(const UINT16 clientPoolSize) {
 	userManager = new UserManager;
-	userManager->Init(CLIENTPOOL_SIZE);
+	userManager->Init(clientPoolSize);
 
 	roomManager = new RoomManager;
 	roomManager->Init();

@@ -20,10 +20,12 @@ namespace ServerNetLib {
 		UINT8 status;
 		SOCKET acceptSocket;
 
-		char acceptBuffer[BUFFER_SIZE];
+		UINT16 bufferSize;
+
+		char* acceptBuffer;
 		WSAOverlappedEx acceptOverlappedEx;
 
-		char recvBuffer[BUFFER_SIZE];
+		char* recvBuffer;
 		WSAOverlappedEx recvOverlappedEx;
 
 		queue<WSAOverlappedEx*> sendingQueue;
@@ -31,7 +33,8 @@ namespace ServerNetLib {
 
 		//	UINT32 latestClosedTime = 0;
 	public:
-		ClientConnection(UINT32 index);
+		ClientConnection(const UINT32 index, const UINT16 bufferSize);
+		~ClientConnection();
 
 		bool PostAccept(SOCKET listenSocket);
 		bool ConnectIOCP(HANDLE IOCPHandle);

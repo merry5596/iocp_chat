@@ -2,11 +2,21 @@
 
 namespace ServerNetLib {
 
-	ClientConnection::ClientConnection(UINT32 index) {
+	ClientConnection::ClientConnection(const UINT32 index, const UINT16 bufferSize) {
 		this->index = index;
 		status = (UINT16)CONNECTION_STATUS::READY;
-		//isSending = false;
+		this->bufferSize = bufferSize;
+		acceptBuffer = new char[bufferSize];
+		recvBuffer = new char[bufferSize];
 	}
+
+	ClientConnection::~ClientConnection() {
+		this->index = index;
+		status = (UINT16)CONNECTION_STATUS::READY;
+		delete []acceptBuffer;
+		delete []recvBuffer;
+	}
+	
 
 	bool ClientConnection::PostAccept(SOCKET listenSocket) {	//AccepterThread에서 접근(단일스레드)
 		acceptSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
@@ -16,7 +26,7 @@ namespace ServerNetLib {
 		}
 
 		DWORD bytes = 0;
-		ZeroMemory(acceptBuffer, BUFFER_SIZE);
+		ZeroMemory(acceptBuffer, bufferSize);
 		ZeroMemory(&acceptOverlappedEx, sizeof(WSAOverlappedEx));
 		acceptOverlappedEx.operation = IOOperation::ACCEPT;
 		acceptOverlappedEx.clientIndex = index;
@@ -51,11 +61,11 @@ namespace ServerNetLib {
 		DWORD bufCnt = 1;	//버퍼 개수. 일반적으로 1개로 설정
 		DWORD bytes = 0;
 		DWORD flags = 0;
-		ZeroMemory(recvBuffer, BUFFER_SIZE);
+		ZeroMemory(recvBuffer, bufferSize);
 		ZeroMemory(&recvOverlappedEx, sizeof(WSAOverlappedEx));
 		recvOverlappedEx.operation = IOOperation::RECV;
 		recvOverlappedEx.clientIndex = index;
-		recvOverlappedEx.wsaBuf.len = BUFFER_SIZE;
+		recvOverlappedEx.wsaBuf.len = bufferSize;
 		recvOverlappedEx.wsaBuf.buf = recvBuffer;
 		int ret = WSARecv(acceptSocket, &(recvOverlappedEx.wsaBuf), bufCnt, &bytes, &flags, (LPWSAOVERLAPPED)&recvOverlappedEx, NULL);
 		if (ret != 0 && WSAGetLastError() != ERROR_IO_PENDING) {
@@ -68,7 +78,7 @@ namespace ServerNetLib {
 	}
 
 	void ClientConnection::SendData(char* data, UINT16 size) {	//PacketThread가 접근
-		char* sendBuffer = new char[BUFFER_SIZE];
+		char* sendBuffer = new char[bufferSize];
 		CopyMemory(sendBuffer, data, size);
 		WSAOverlappedEx* sendOverlappedEx = new WSAOverlappedEx;
 		ZeroMemory(sendOverlappedEx, sizeof(WSAOverlappedEx));

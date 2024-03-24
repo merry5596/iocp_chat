@@ -31,4 +31,7 @@
       <Filter>ChatLogic</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ServerConfig.ini" />
+  </ItemGroup>
 </Project>

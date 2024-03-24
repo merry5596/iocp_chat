@@ -7,10 +7,6 @@
 #include <mswsock.h>	//AcceptEx
 
 namespace ServerNetLib {
-
-	const UINT16 THREADPOOL_SIZE = 4;
-	const UINT16 BUFFER_SIZE = 256;
-
 	enum class IOOperation {
 		ACCEPT,
 		RECV,
@@ -23,5 +19,4 @@ namespace ServerNetLib {
 		UINT32 clientIndex;
 		WSABUF wsaBuf;
 	};
-	
 }

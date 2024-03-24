@@ -9,7 +9,7 @@ namespace ServerNetLib {
 		}
 	}
 
-	bool IOCPNetwork::IOCPInit(UINT16 SERVER_PORT, UINT16 CLIENTPOOL_SIZE) {
+	bool IOCPNetwork::IOCPInit(ServerConfig* serverConfig) {
 		//Winsock 사용
 		WSAData wsaData;
 		int ret = WSAStartup(MAKEWORD(2, 2), &wsaData);	//2.2 버전으로 초기화, wsaData에 저장
@@ -28,7 +28,7 @@ namespace ServerNetLib {
 		//리슨 소켓 주소연결
 		SOCKADDR_IN addr;
 		addr.sin_family = AF_INET;
-		addr.sin_port = htons(SERVER_PORT);
+		addr.sin_port = htons(serverConfig->SERVER_PORT);
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		ret = bind(listenSocket, (const SOCKADDR*)&addr, (int)sizeof(SOCKADDR_IN));
 		if (ret != 0) {
@@ -37,14 +37,15 @@ namespace ServerNetLib {
 		}
 
 		//리슨 소켓 등록
-		ret = listen(listenSocket, 5);	//backlog(접속대기큐): 5
+		ret = listen(listenSocket, serverConfig->BACK_LOG);
 		if (ret != 0) {
 			printf("[ERROR]listen() error: %d", WSAGetLastError());
 			return false;
 		}
 
 		//IOCP 핸들러 생성
-		IOCPHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, THREADPOOL_SIZE);
+		threadPoolSize = serverConfig->THREAD_POOL_SIZE;
+		IOCPHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, threadPoolSize);
 		if (IOCPHandle == NULL) {
 			printf("[ERROR]CreateIoCompletionPort()(create) error: %d", WSAGetLastError());
 		}
@@ -56,7 +57,8 @@ namespace ServerNetLib {
 		}
 
 		//커넥션 풀 생성
-		CreateClientPool(CLIENTPOOL_SIZE);
+		clientPoolSize = serverConfig->CLIENT_POOL_SIZE;
+		CreateClientPool(clientPoolSize, serverConfig->BUFFER_SIZE);
 
 		return true;
 	}
@@ -64,7 +66,7 @@ namespace ServerNetLib {
 	void IOCPNetwork::IOCPStart() {
 		//Worker 스레드 시작
 		isWorkerRun = true;
-		for (int i = 0; i < THREADPOOL_SIZE; i++) {
+		for (int i = 0; i < threadPoolSize; i++) {
 			workerThreadPool.emplace_back([this]() { WorkerThread(); });
 		}
 
@@ -93,9 +95,9 @@ namespace ServerNetLib {
 		clientPool[clientIndex]->SendData(data, size);
 	}
 
-	void IOCPNetwork::CreateClientPool(UINT16 CLIENTPOOL_SIZE) {
-		for (int i = 0; i < CLIENTPOOL_SIZE; i++) {
-			clientPool.push_back(new ClientConnection(i));
+	void IOCPNetwork::CreateClientPool(UINT16 clientPoolSize, UINT16 bufferSize) {
+		for (int i = 0; i < clientPoolSize; i++) {
+			clientPool.push_back(new ClientConnection(i, bufferSize));
 		}
 	}
 

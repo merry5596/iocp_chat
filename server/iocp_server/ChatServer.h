@@ -7,12 +7,17 @@
 class ChatServer : public ServerNetLib::IOCPNetwork {
 private:
 	unique_ptr<PacketManager> packetManager;
+	unique_ptr<ServerConfig> serverConfig;
 public:
-	void Init(const UINT16 SERVER_PORT, const UINT16 CLIENTPOOL_SIZE) {
+	void Init() {
+		serverConfig = std::make_unique<ServerConfig>();
+		serverConfig->LoadConfig();
+
 		packetManager = std::make_unique<PacketManager>();
-		packetManager->Init(CLIENTPOOL_SIZE);
+		packetManager->Init(serverConfig->CLIENT_POOL_SIZE);
 		packetManager->SendData = [&](UINT32 clientIndex, char* data, UINT16 size) { SendData(clientIndex, data, size); };
-		IOCPInit(SERVER_PORT, CLIENTPOOL_SIZE);
+
+		IOCPInit(serverConfig.get());
 	}
 
 	void Start() {

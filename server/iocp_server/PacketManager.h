@@ -29,9 +29,9 @@ private:
 	unordered_map<UINT16, ProcessFunction> processFuncDic;
 
 public:
-	PacketManager();
 	~PacketManager();
-	void Init(const UINT16 CLIENTPOOL_SIZE);
+
+	void Init(const UINT16 clientPoolSize);
 	void Start();
 	void End();
 	void OnDataReceive(UINT32 clientIndex, char* data, UINT16 size);	//멀티스레드가 접근하는 함수
