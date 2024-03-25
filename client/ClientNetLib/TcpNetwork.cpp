@@ -39,15 +39,17 @@ namespace ClientNetLib {
 
 	bool TcpNetwork::Refresh(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		End();
-		bool ret = CreateSocket();
-		if (ret == false) {
+
+		//소켓 생성
+		if (CreateSocket() == false) {
 			return false;
 		}
 
-		ret = Connect(SERVER_PORT, SERVER_IP);
-		if (ret == false) {
+		//연결
+		if (Connect(SERVER_PORT, SERVER_IP) == false) {
 			return false;
 		}
+
 		Start();
 		return true;
 	}

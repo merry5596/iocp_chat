@@ -1,5 +1,4 @@
 #pragma once
-#include "Define.h"
 #include "TcpNetwork.h"
 #include "ErrorCode.h"
 #include "Packet.h"
@@ -9,15 +8,16 @@
 #include <iostream>
 using namespace std;
 
-//채팅 앱의 기능 관련 컨트롤러
 class ChatManager : public ClientNetLib::TcpNetwork {
 private:
 	unique_ptr<PacketBufferManager> packetBufferManager;
+	unique_ptr<NotifyManager> notifyManager;
 
 public:
 	bool Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
+		notifyManager = make_unique<NotifyManager>();
 		packetBufferManager = make_unique<PacketBufferManager>();
-		packetBufferManager->Init();
+		packetBufferManager->Init(notifyManager.get());
 		return TcpNetwork::Init(SERVER_PORT, SERVER_IP);
 	}
 
@@ -33,8 +33,8 @@ public:
 
 	void OnReceive(char* data, UINT16 size, bool errflag, UINT32 err) {
 		if (errflag) {
-			printf("서버 통신이 종료됨\n");
-			printf("종료: /exit\n");
+			printf("서버 통신 종료\n");
+			notifyManager->AddDisconnectNotify();
 		}
 		else {
 			printf("[RECV] size: %d\n", size);
@@ -51,11 +51,11 @@ public:
 		}
 	}
 
-	bool Login(const char* name) {
+	UINT16 Login(const char* name) {
 		LoginRequestPacket loginPkt;
 		loginPkt.packetID = (UINT16)PACKET_ID::LOGIN_REQUEST;
 		loginPkt.packetSize = sizeof(LoginRequestPacket);
-		strcpy_s(loginPkt.name, strlen(name) + 1, name);
+		strcpy_s(loginPkt.name, NAME_LEN, name);
 
 		if (SendData((char*)&loginPkt, sizeof(LoginRequestPacket)) == false) {
 			return false;
@@ -64,7 +64,7 @@ public:
 		return packetBufferManager->GetLoginResult();
 	}
 
-	bool EnterRoom(UINT16 roomNum) {
+	UINT16 EnterRoom(UINT16 roomNum) {
 		RoomEnterRequestPacket roomEnterPkt;
 		roomEnterPkt.packetID = (UINT16)PACKET_ID::ROOM_ENTER_REQUEST;
 		roomEnterPkt.packetSize = sizeof(RoomEnterRequestPacket);
@@ -77,7 +77,7 @@ public:
 		return packetBufferManager->GetRoomEnterResult();
 	}
 
-	bool LeaveRoom() {
+	UINT16 LeaveRoom() {
 		RoomLeaveRequestPacket reqPkt;
 		reqPkt.packetID = (UINT16)PACKET_ID::ROOM_LEAVE_REQUEST;
 		reqPkt.packetSize = sizeof(RoomLeaveRequestPacket);
@@ -113,4 +113,7 @@ public:
 		return SendData((char*)&chatPkt, sizeof(ChatRequestPacket));
 	}
 
+	Notify GetNotify() {
+		return notifyManager->GetNotify();
+	}
 };

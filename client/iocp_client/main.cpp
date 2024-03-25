@@ -35,6 +35,31 @@ int main(void) {
 	cout << "채팅 프로그램을 시작합니다~" << endl;
 	chatManager.Start();
 
+	//UI Test
+	bool isNotifyRun = true;
+	thread notifyThread = thread([&]() {
+		while (isNotifyRun) {
+			Notify ntf = chatManager.GetNotify();
+			if (ntf.packetID != 0) {
+				//cout 처리
+				cout << "[UI출력]" << ntf.name;
+				if (ntf.packetID == (UINT16)PACKET_ID::CHAT_NOTIFY) {
+					cout << " : " << ntf.msg << endl;
+				}
+				else if (ntf.packetID == (UINT16)PACKET_ID::ROOM_ENTER_NOTIFY) {
+					cout << "님이 방에 입장" << endl;
+				}
+				else if (ntf.packetID == (UINT16)PACKET_ID::ROOM_LEAVE_NOTIFY) {
+					cout << "님이 방에서 퇴장" << endl;
+				}
+				else if (ntf.packetID == (UINT16)PACKET_ID::DISCONNECT) {
+					cout << "서버와의 통신이 종료되었습니다." << endl;
+				}
+			}
+			this_thread::sleep_for(chrono::milliseconds(1));
+		}
+		});
+
 	//닉네임 설정(로그인)
 	string name;
 	UINT16 result;
@@ -93,5 +118,10 @@ int main(void) {
 
 	chatManager.End();
 	cout << "프로그램 종료." << endl;
+	
+	isNotifyRun = false;
+	if (notifyThread.joinable()) {
+		notifyThread.join();
+	}
 	return 0;
 }

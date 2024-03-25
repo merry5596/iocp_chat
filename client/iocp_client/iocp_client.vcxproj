@@ -138,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChatManager.h" />
+    <ClInclude Include="NotifyManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\common\CommonLib\CommonLib.vcxproj">

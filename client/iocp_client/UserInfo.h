@@ -17,9 +17,8 @@ private:
 public:
 	UserInfo() : state((UINT16)USER_STATE::NONE) {
 		ZeroMemory(name, NAME_LEN);
-		//roomNum = 0;
+		roomNum = 0;
 	}
-	~UserInfo() {}
 
 	void Login(const char* name) {
 		strcpy_s(this->name, NAME_LEN, name);

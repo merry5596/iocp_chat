@@ -3,6 +3,7 @@
 #include "ErrorCode.h"
 #include "Packet.h"
 #include "UserInfo.h"
+#include "NotifyManager.h"
 
 #include <thread>
 #include <mutex>
@@ -23,24 +24,29 @@ private:
 	thread packetThread;
 	bool isPacketRun;
 	
-	UserInfo userInfo;
+	unique_ptr<UserInfo> userInfo;
 
 	//응답패킷처리 완료시 플래그
 	bool isLoginResCompleted;
-	bool loginResult;
+	UINT16 loginResult;
 
 	bool isRoomEnterResCompleted;
-	bool roomEnterResult;
+	UINT16 roomEnterResult;
 
 	bool isRoomLeaveResCompleted;
-	bool roomLeaveResult;
+	UINT16 roomLeaveResult;
 
+	NotifyManager* notifyManager;
+
+	//패킷처리 함수
 	typedef void (PacketBufferManager::* ProcessFunction)(char*);
 	unordered_map<UINT16, ProcessFunction> processFuncDic;
 public:
-	void Init() {
+	void Init(NotifyManager* notifyManager) {
 		writePos = 0;
 		readPos = 0;
+		userInfo = make_unique<UserInfo>();
+		this->notifyManager = notifyManager;
 
 		processFuncDic = unordered_map<UINT16, ProcessFunction>();
 		processFuncDic[(UINT16)PACKET_ID::LOGIN_RESPONSE] = &PacketBufferManager::ProcessLoginResponse;
@@ -70,8 +76,8 @@ public:
 		SetPacket(data, size);	//버퍼에 데이터를 넣는다.
 	}
 
-	//응답 패킷 처리 완료 대기 함수들
-	bool GetLoginResult() {
+	//응답 패킷 처리 완료 대기 함수들 (ChatManager에서 패킷 요청 후 호출)
+	UINT16 GetLoginResult() {
 		while (true) {
 			if (isLoginResCompleted) {
 				isLoginResCompleted = false;
@@ -80,7 +86,7 @@ public:
 			this_thread::sleep_for(chrono::milliseconds(1));
 		}
 	}
-	bool GetRoomEnterResult() {
+	UINT16 GetRoomEnterResult() {
 		while (true) {
 			if (isRoomEnterResCompleted) {
 				isRoomEnterResCompleted = false;
@@ -89,7 +95,7 @@ public:
 			this_thread::sleep_for(chrono::milliseconds(1));
 		}
 	}
-	bool GetRoomLeaveResult() {
+	UINT16 GetRoomLeaveResult() {
 		while (true) {
 			if (isRoomLeaveResCompleted) {
 				isRoomLeaveResCompleted = false;
@@ -136,7 +142,7 @@ private:
 			}
 			header = (PACKET_HEADER*)&packetBuffer[readPos];
 			if (header->packetID < (UINT16)PACKET_ID::LOGIN_RESPONSE) {
-				cout << "[ERROR]ProcessBuffer(): 응답 패킷이 아님" << endl;
+				//cout << "[ERROR]ProcessBuffer(): 응답 패킷이 아님" << endl;
 				return false;
 			}
 
@@ -159,13 +165,14 @@ private:
 		return true;
 	}
 
+	//패킷종류별 처리
 	void ProcessLoginResponse(char* pkt) {
 		LoginResponsePacket* resPkt = reinterpret_cast<LoginResponsePacket*>(pkt);
 		if (resPkt->result == ERROR_CODE::ALREADY_EXIST_NAME) {
 			cout << "이미 존재하는 닉네임입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
-			userInfo.Login(resPkt->name);
+			userInfo->Login(resPkt->name);
 			cout << resPkt->name << "님 로그인 성공" << endl;
 		}
 
@@ -185,7 +192,7 @@ private:
 			cout << "해당 방은 인원이 모두 찼습니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
-			userInfo.EnterRoom(resPkt->roomNum);
+			userInfo->EnterRoom(resPkt->roomNum);
 			cout << resPkt->roomNum << "번 방에 입장합니다." << endl;
 		}
 
@@ -199,7 +206,7 @@ private:
 			cout << "퇴장할 수 없는 상태입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
-			userInfo.LeaveRoom();
+			userInfo->LeaveRoom();
 			cout << "방을 퇴장합니다." << endl;
 		}
 		roomLeaveResult = resPkt->result;
@@ -221,15 +228,18 @@ private:
 	void ProcessChatNotify(char* pkt) {
 		ChatNotifyPacket* ntfPkt = reinterpret_cast<ChatNotifyPacket*>(pkt);
 		cout << ntfPkt->name << " : " << ntfPkt->msg << endl;
+		notifyManager->AddChatNotify(ntfPkt->name, ntfPkt->msg);
 	}
 
 	void ProcessRoomEnterNotify(char* pkt) {
 		RoomEnterNotifyPacket* ntfPkt = reinterpret_cast<RoomEnterNotifyPacket*>(pkt);
 		cout << ntfPkt->name << "님이 방에 입장하셨습니다." << endl;
+		notifyManager->AddRoomEnterNotify(ntfPkt->name);
 	}
 
 	void ProcessRoomLeaveNotify(char* pkt) {
 		RoomLeaveNotifyPacket* ntfPkt = reinterpret_cast<RoomLeaveNotifyPacket*>(pkt);
 		cout << ntfPkt->name << "님이 방에서 퇴장하셨습니다." << endl;
+		notifyManager->AddRoomLeaveNotify(ntfPkt->name);
 	}
 };

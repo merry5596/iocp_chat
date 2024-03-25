@@ -13,6 +13,9 @@
     <ClInclude Include="ChatManager.h">
       <Filter>ChatLogic</Filter>
     </ClInclude>
+    <ClInclude Include="NotifyManager.h">
+      <Filter>ChatLogic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ChatLogic">
