@@ -17,9 +17,9 @@ namespace ChatServerLib {
 			NetworkConfig::LoadConfig();
 			cout << "[LOAD CHAT CONFIG]" << endl;
 
-			MAX_ROOM_CNT = GetPrivateProfileInt(L"ChatConfig", L"MAX_ROOM_CNT", 64, configFilePath.c_str());
+			MAX_ROOM_CNT = GetPrivateProfileInt(L"ChatConfig", L"MAX_ROOM_CNT", 10, configFilePath.c_str());
 			cout << "MAX_ROOM_CNT : " << MAX_ROOM_CNT << endl;
-			MAX_ROOM_USER_CNT = GetPrivateProfileInt(L"ChatConfig", L"MAX_ROOM_USER_CNT", 64, configFilePath.c_str());
+			MAX_ROOM_USER_CNT = GetPrivateProfileInt(L"ChatConfig", L"MAX_ROOM_USER_CNT", 2, configFilePath.c_str());
 			cout << "MAX_ROOM_USER_CNT : " << MAX_ROOM_USER_CNT << endl;
 		}
 	};
