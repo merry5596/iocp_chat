@@ -1,14 +1,12 @@
 #include "ChatServer.h"
 
+#include <wchar.h>
 #include <iostream>
 using namespace std;
 
-const UINT16 SERVER_PORT = 11021;
-const UINT16 CLIENTPOOL_SIZE = 100;
-
 int main(void) {
-	ChatServer server;
-	server.Init(SERVER_PORT, CLIENTPOOL_SIZE);
+	ChatServerLib::ChatServer server;
+	server.Init();
 	server.Start();
 
 	printf("Chat Server Start! ");

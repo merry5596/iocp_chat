@@ -21,10 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{d1c401d5-7aa7-46a4-81bf-45b755e32aad}</ProjectGuid>
-    <RootNamespace>ServerNetLib</RootNamespace>
+    <ProjectGuid>{d82b9964-8ff2-4a70-9cc5-842a100b7b89}</ProjectGuid>
+    <RootNamespace>ChatClientLib</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>ServerNetLib</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -114,7 +113,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\iocp\common\CommonLib;C:\iocp\client\ClientNetLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -142,14 +141,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Define.h" />
-    <ClInclude Include="IOCPNetwork.h" />
-    <ClInclude Include="NetworkConfig.h" />
+    <ClInclude Include="ChatManager.h" />
+    <ClInclude Include="NotifyManager.h" />
+    <ClInclude Include="PacketBufferManager.h" />
+    <ClInclude Include="UserInfo.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ClientConnection.cpp" />
-    <ClCompile Include="ClientConnection.h" />
-    <ClCompile Include="IOCPNetwork.cpp" />
+    <ClCompile Include="ChatManager.cpp" />
+    <ClCompile Include="NotifyManager.cpp" />
+    <ClCompile Include="PacketBufferManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\common\CommonLib\CommonLib.vcxproj">
+      <Project>{7fa99392-85ff-4b29-a714-801b6150a2d8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientNetLib\ClientNetLib.vcxproj">
+      <Project>{1a6da99f-d0c1-4c0a-a12b-07a264a1588e}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

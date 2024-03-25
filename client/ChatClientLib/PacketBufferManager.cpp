@@ -1,46 +1,12 @@
-#pragma once
+#include "PacketBufferManager.h"
 
-#include "ErrorCode.h"
-#include "Packet.h"
-#include "UserInfo.h"
+namespace ChatClientLib {
 
-#include <thread>
-#include <mutex>
-#include <unordered_map>
-#include <iostream>
-using namespace std;
-
-const UINT16 PACKET_BUFFER_SIZE = 8096;
-
-//recv packet을 처리하는 버퍼 관련
-class PacketBufferManager {
-private:
-	char packetBuffer[PACKET_BUFFER_SIZE];
-	UINT16 writePos;
-	UINT16 readPos;
-	mutex mtx;
-
-	thread packetThread;
-	bool isPacketRun;
-	
-	UserInfo userInfo;
-
-	//응답패킷처리 완료시 플래그
-	bool isLoginResCompleted;
-	bool loginResult;
-
-	bool isRoomEnterResCompleted;
-	bool roomEnterResult;
-
-	bool isRoomLeaveResCompleted;
-	bool roomLeaveResult;
-
-	typedef void (PacketBufferManager::* ProcessFunction)(char*);
-	unordered_map<UINT16, ProcessFunction> processFuncDic;
-public:
-	void Init() {
+	void PacketBufferManager::Init(NotifyManager* notifyManager) {
 		writePos = 0;
 		readPos = 0;
+		userInfo = make_unique<UserInfo>();
+		this->notifyManager = notifyManager;
 
 		processFuncDic = unordered_map<UINT16, ProcessFunction>();
 		processFuncDic[(UINT16)PACKET_ID::LOGIN_RESPONSE] = &PacketBufferManager::ProcessLoginResponse;
@@ -53,25 +19,25 @@ public:
 		processFuncDic[(UINT16)PACKET_ID::ROOM_LEAVE_NOTIFY] = &PacketBufferManager::ProcessRoomLeaveNotify;
 	}
 
-	void Start() {
+	void PacketBufferManager::Start() {
 		packetThread = thread([&]() {
 			PacketThread();
-		});
+			});
 	}
 
-	void End() {
+	void PacketBufferManager::End() {
 		isPacketRun = false;
 		if (packetThread.joinable()) {
 			packetThread.join();
 		}
 	}
 
-	void OnDataReceive(char* data, UINT16 size) {
+	void PacketBufferManager::OnDataReceive(char* data, UINT16 size) {
 		SetPacket(data, size);	//버퍼에 데이터를 넣는다.
 	}
 
-	//응답 패킷 처리 완료 대기 함수들
-	bool GetLoginResult() {
+	//응답 패킷 처리 완료 대기 함수들 (ChatManager에서 패킷 요청 후 호출)
+	UINT16 PacketBufferManager::GetLoginResult() {
 		while (true) {
 			if (isLoginResCompleted) {
 				isLoginResCompleted = false;
@@ -80,7 +46,7 @@ public:
 			this_thread::sleep_for(chrono::milliseconds(1));
 		}
 	}
-	bool GetRoomEnterResult() {
+	UINT16 PacketBufferManager::GetRoomEnterResult() {
 		while (true) {
 			if (isRoomEnterResCompleted) {
 				isRoomEnterResCompleted = false;
@@ -89,7 +55,7 @@ public:
 			this_thread::sleep_for(chrono::milliseconds(1));
 		}
 	}
-	bool GetRoomLeaveResult() {
+	UINT16 PacketBufferManager::GetRoomLeaveResult() {
 		while (true) {
 			if (isRoomLeaveResCompleted) {
 				isRoomLeaveResCompleted = false;
@@ -99,18 +65,7 @@ public:
 		}
 	}
 
-private:
-	void PacketThread() {
-		isPacketRun = true;
-		while (isPacketRun) {
-			bool ret = ProcessBuffer();
-			if (ret == false) {
-				this_thread::sleep_for(chrono::milliseconds(32));
-			}
-		}
-	}
-
-	void SetPacket(char* data, UINT16 size) {
+	void PacketBufferManager::SetPacket(char* data, UINT16 size) {
 		lock_guard<mutex> lock(mtx);
 		if (writePos + size >= PACKET_BUFFER_SIZE) {	//이 쓰기로 버퍼가 넘친다면 우선 안읽은 데이터를 버퍼 앞으로 복사하고 이어서 쓰기
 			auto noReadDataSize = writePos - readPos;
@@ -123,7 +78,17 @@ private:
 		//printf("쓰기완료. writePos: %d, readPos: %d", writePos, readPos);
 	}
 
-	bool ProcessBuffer() {
+	void PacketBufferManager::PacketThread() {
+		isPacketRun = true;
+		while (isPacketRun) {
+			bool ret = ProcessBuffer();
+			if (ret == false) {
+				this_thread::sleep_for(chrono::milliseconds(32));
+			}
+		}
+	}
+
+	bool PacketBufferManager::ProcessBuffer() {
 		PACKET_HEADER* header;
 		UINT16 pktStartPos;
 
@@ -136,7 +101,7 @@ private:
 			}
 			header = (PACKET_HEADER*)&packetBuffer[readPos];
 			if (header->packetID < (UINT16)PACKET_ID::LOGIN_RESPONSE) {
-				cout << "[ERROR]ProcessBuffer(): 응답 패킷이 아님" << endl;
+				//cout << "[ERROR]ProcessBuffer(): 응답 패킷이 아님" << endl;
 				return false;
 			}
 
@@ -159,13 +124,14 @@ private:
 		return true;
 	}
 
-	void ProcessLoginResponse(char* pkt) {
+	//패킷종류별 처리
+	void PacketBufferManager::ProcessLoginResponse(char* pkt) {
 		LoginResponsePacket* resPkt = reinterpret_cast<LoginResponsePacket*>(pkt);
 		if (resPkt->result == ERROR_CODE::ALREADY_EXIST_NAME) {
 			cout << "이미 존재하는 닉네임입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
-			userInfo.Login(resPkt->name);
+			userInfo->Login(resPkt->name);
 			cout << resPkt->name << "님 로그인 성공" << endl;
 		}
 
@@ -173,7 +139,7 @@ private:
 		isLoginResCompleted = true;
 	}
 
-	void ProcessRoomEnterResponse(char* pkt) {
+	void PacketBufferManager::ProcessRoomEnterResponse(char* pkt) {
 		RoomEnterResponsePacket* resPkt = reinterpret_cast<RoomEnterResponsePacket*>(pkt);
 		if (resPkt->result == ERROR_CODE::USER_STATE_ERROR) {
 			cout << "입장할 수 없는 상태입니다." << endl;
@@ -185,7 +151,7 @@ private:
 			cout << "해당 방은 인원이 모두 찼습니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
-			userInfo.EnterRoom(resPkt->roomNum);
+			userInfo->EnterRoom(resPkt->roomNum);
 			cout << resPkt->roomNum << "번 방에 입장합니다." << endl;
 		}
 
@@ -193,43 +159,47 @@ private:
 		isRoomEnterResCompleted = true;
 	}
 
-	void ProcessRoomLeaveResponse(char* pkt) {
+	void PacketBufferManager::ProcessRoomLeaveResponse(char* pkt) {
 		RoomLeaveResponsePacket* resPkt = reinterpret_cast<RoomLeaveResponsePacket*>(pkt);
 		if (resPkt->result == ERROR_CODE::USER_STATE_ERROR) {
 			cout << "퇴장할 수 없는 상태입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
-			userInfo.LeaveRoom();
+			userInfo->LeaveRoom();
 			cout << "방을 퇴장합니다." << endl;
 		}
 		roomLeaveResult = resPkt->result;
 		isRoomLeaveResCompleted = true;
 	}
 
-	void ProcessEchoResponse(char* pkt) {
+	void PacketBufferManager::ProcessEchoResponse(char* pkt) {
 		EchoResponsePacket* resPkt = reinterpret_cast<EchoResponsePacket*>(pkt);
 		cout << "Server : " << resPkt->msg << endl;;
 	}
 
-	void ProcessChatResponse(char* pkt) {
+	void PacketBufferManager::ProcessChatResponse(char* pkt) {
 		ChatResponsePacket* resPkt = reinterpret_cast<ChatResponsePacket*>(pkt);
 		if (resPkt->result != ERROR_CODE::NONE) {
 			cout << "ProcessChatResponse() Error: " << resPkt->result << endl;
 		}
 	}
 
-	void ProcessChatNotify(char* pkt) {
+	void PacketBufferManager::ProcessChatNotify(char* pkt) {
 		ChatNotifyPacket* ntfPkt = reinterpret_cast<ChatNotifyPacket*>(pkt);
 		cout << ntfPkt->name << " : " << ntfPkt->msg << endl;
+		notifyManager->AddChatNotify(ntfPkt->name, ntfPkt->msg);
 	}
 
-	void ProcessRoomEnterNotify(char* pkt) {
+	void PacketBufferManager::ProcessRoomEnterNotify(char* pkt) {
 		RoomEnterNotifyPacket* ntfPkt = reinterpret_cast<RoomEnterNotifyPacket*>(pkt);
 		cout << ntfPkt->name << "님이 방에 입장하셨습니다." << endl;
+		notifyManager->AddRoomEnterNotify(ntfPkt->name);
 	}
 
-	void ProcessRoomLeaveNotify(char* pkt) {
+	void PacketBufferManager::ProcessRoomLeaveNotify(char* pkt) {
 		RoomLeaveNotifyPacket* ntfPkt = reinterpret_cast<RoomLeaveNotifyPacket*>(pkt);
 		cout << ntfPkt->name << "님이 방에서 퇴장하셨습니다." << endl;
+		notifyManager->AddRoomLeaveNotify(ntfPkt->name);
 	}
-};
+
+}

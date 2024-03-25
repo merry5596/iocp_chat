@@ -108,7 +108,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\iocp\common\CommonLib;C:\iocp\client\ClientNetLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\iocp\common\CommonLib;C:\iocp\client\ClientNetLib;C:\iocp\client\ChatClientLib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,18 +133,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PacketBufferManager.h" />
-    <ClCompile Include="UserInfo.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ChatManager.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\common\CommonLib\CommonLib.vcxproj">
-      <Project>{7fa99392-85ff-4b29-a714-801b6150a2d8}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientNetLib\ClientNetLib.vcxproj">
-      <Project>{1a6da99f-d0c1-4c0a-a12b-07a264a1588e}</Project>
+    <ProjectReference Include="..\ChatClientLib\ChatClientLib.vcxproj">
+      <Project>{d82b9964-8ff2-4a70-9cc5-842a100b7b89}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

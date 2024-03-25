@@ -104,7 +104,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\iocp\server\ServerNetLib;C:\iocp\common\CommonLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\iocp\server\ChatServerLib;C:\iocp\server\ServerNetLib;C:\iocp\common\CommonLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,23 +129,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ChatServer.h" />
-    <ClInclude Include="PacketManager.h" />
-    <ClInclude Include="Room.h" />
-    <ClInclude Include="RoomManager.h" />
-    <ClInclude Include="User.h" />
-    <ClInclude Include="UserManager.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PacketManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\common\CommonLib\CommonLib.vcxproj">
-      <Project>{7fa99392-85ff-4b29-a714-801b6150a2d8}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\ServerNetLib\ServerNetLib.vcxproj">
-      <Project>{d1c401d5-7aa7-46a4-81bf-45b755e32aad}</Project>
+    <None Include="config.ini" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ChatServerLib\ChatServerLib.vcxproj">
+      <Project>{12819dc0-bfcf-4bc4-8e83-ccd0e808bf92}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

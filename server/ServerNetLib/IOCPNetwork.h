@@ -2,6 +2,7 @@
 
 #include "Define.h"
 #include "ClientConnection.h"
+#include "NetworkConfig.h"
 
 #include <vector>
 #include <thread>
@@ -15,15 +16,18 @@ namespace ServerNetLib {
 		SOCKET listenSocket;
 
 		vector<ClientConnection*> clientPool;
+		UINT16 clientPoolSize;
 
 		thread accepterThread;
-		vector<thread> workerThreadPool;
 		bool isAccepterRun;
+
+		vector<thread> workerThreadPool;
+		UINT16 threadPoolSize;
 		bool isWorkerRun;
 
 	public:
 		~IOCPNetwork();
-		bool IOCPInit(UINT16 SERVER_PORT, UINT16 CLIENTPOOL_SIZE);
+		bool IOCPInit(NetworkConfig* config);
 		void IOCPStart();
 		void IOCPEnd();
 		void SendData(UINT32 clientIndex, char* data, UINT16 size);
@@ -34,7 +38,7 @@ namespace ServerNetLib {
 		virtual void OnDisconnect(UINT32 clientIndex) {}
 
 	private:
-		void CreateClientPool(UINT16 CLIENTPOOL_SIZE);
+		void CreateClientPool(const UINT16 clientPoolSize, const UINT16 bufferSize);
 		void AccepterThread();
 		void WorkerThread();
 
