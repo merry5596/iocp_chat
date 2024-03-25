@@ -1,37 +1,25 @@
-#pragma once
-#include "TcpNetwork.h"
-#include "ErrorCode.h"
-#include "Packet.h"
-#include "PacketBufferManager.h"
-#include "UserInfo.h"
+#include "ChatManager.h"
 
-#include <iostream>
-using namespace std;
+namespace ChatClientLib {
 
-class ChatManager : public ClientNetLib::TcpNetwork {
-private:
-	unique_ptr<PacketBufferManager> packetBufferManager;
-	unique_ptr<NotifyManager> notifyManager;
-
-public:
-	bool Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
+	bool ChatManager::Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
 		notifyManager = make_unique<NotifyManager>();
 		packetBufferManager = make_unique<PacketBufferManager>();
 		packetBufferManager->Init(notifyManager.get());
 		return TcpNetwork::Init(SERVER_PORT, SERVER_IP);
 	}
 
-	void Start() {
+	void ChatManager::Start() {
 		packetBufferManager->Start();
 		TcpNetwork::Start();
 	}
 
-	void End() {
+	void ChatManager::End() {
 		packetBufferManager->End();
 		TcpNetwork::End();
 	}
 
-	void OnReceive(char* data, UINT16 size, bool errflag, UINT32 err) {
+	void ChatManager::OnReceive(char* data, UINT16 size, bool errflag, UINT32 err) {
 		if (errflag) {
 			printf("서버 통신 종료\n");
 			notifyManager->AddDisconnectNotify();
@@ -42,7 +30,7 @@ public:
 		}
 	}
 
-	void OnSend(char* data, UINT16 size, bool errflag, UINT32 err) {
+	void ChatManager::OnSend(char* data, UINT16 size, bool errflag, UINT32 err) {
 		if (errflag) {
 			printf("error: %d\n", err);
 		}
@@ -51,7 +39,7 @@ public:
 		}
 	}
 
-	UINT16 Login(const char* name) {
+	UINT16 ChatManager::Login(const char* name) {
 		LoginRequestPacket loginPkt;
 		loginPkt.packetID = (UINT16)PACKET_ID::LOGIN_REQUEST;
 		loginPkt.packetSize = sizeof(LoginRequestPacket);
@@ -64,7 +52,7 @@ public:
 		return packetBufferManager->GetLoginResult();
 	}
 
-	UINT16 EnterRoom(UINT16 roomNum) {
+	UINT16 ChatManager::EnterRoom(UINT16 roomNum) {
 		RoomEnterRequestPacket roomEnterPkt;
 		roomEnterPkt.packetID = (UINT16)PACKET_ID::ROOM_ENTER_REQUEST;
 		roomEnterPkt.packetSize = sizeof(RoomEnterRequestPacket);
@@ -77,7 +65,7 @@ public:
 		return packetBufferManager->GetRoomEnterResult();
 	}
 
-	UINT16 LeaveRoom() {
+	UINT16 ChatManager::LeaveRoom() {
 		RoomLeaveRequestPacket reqPkt;
 		reqPkt.packetID = (UINT16)PACKET_ID::ROOM_LEAVE_REQUEST;
 		reqPkt.packetSize = sizeof(RoomLeaveRequestPacket);
@@ -89,7 +77,7 @@ public:
 		return packetBufferManager->GetRoomLeaveResult();
 	}
 
-	bool EchoMsg(const char* msg) {
+	bool ChatManager::EchoMsg(const char* msg) {
 		if (strlen(msg) >= ECHO_MSG_LEN) {
 			cout << "메시지가 너무 깁니다." << endl;
 			return false;
@@ -101,8 +89,8 @@ public:
 		return SendData((char*)&echoPkt, sizeof(EchoRequestPacket));
 	}
 
-	bool ChatMsg(const char* msg) {
-		if (strlen(msg) >- CHAT_MSG_LEN) {
+	bool ChatManager::ChatMsg(const char* msg) {
+		if (strlen(msg) > -CHAT_MSG_LEN) {
 			cout << "메시지가 너무 깁니다." << endl;	//TODO: 쪼개서 보내기
 			return false;
 		}
@@ -113,7 +101,8 @@ public:
 		return SendData((char*)&chatPkt, sizeof(ChatRequestPacket));
 	}
 
-	Notify GetNotify() {
+	Notify ChatManager::GetNotify() {
 		return notifyManager->GetNotify();
 	}
-};
+
+}

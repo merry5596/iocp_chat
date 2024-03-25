@@ -4,7 +4,7 @@ const UINT16 SERVER_PORT = 11021;
 const char* SERVER_IP = "127.0.0.1";
 
 int main(void) {
-	ChatManager chatManager;
+	ChatClientLib::ChatManager chatManager;
 
 	//접속
 	string answer;
@@ -39,7 +39,7 @@ int main(void) {
 	bool isNotifyRun = true;
 	thread notifyThread = thread([&]() {
 		while (isNotifyRun) {
-			Notify ntf = chatManager.GetNotify();
+			ChatClientLib::Notify ntf = chatManager.GetNotify();
 			if (ntf.packetID != 0) {
 				//cout 처리
 				cout << "[UI출력]" << ntf.name;
