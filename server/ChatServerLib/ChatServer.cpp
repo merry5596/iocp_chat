@@ -1,15 +1,8 @@
-#pragma once
+﻿#include "ChatServer.h"
 
-#include "IOCPNetwork.h"
-#include "PacketManager.h"
-#include "UserManager.h"
+namespace ChatServerLib {
 
-class ChatServer : public ServerNetLib::IOCPNetwork {
-private:
-	unique_ptr<PacketManager> packetManager;
-	unique_ptr<ServerConfig> serverConfig;
-public:
-	void Init() {
+	void ChatServer::Init() {
 		serverConfig = std::make_unique<ServerConfig>();
 		serverConfig->LoadConfig();
 
@@ -20,35 +13,36 @@ public:
 		IOCPInit(serverConfig.get());
 	}
 
-	void Start() {
+	void ChatServer::Start() {
 		packetManager->Start();
 		IOCPStart();
 	}
 
-	void End() {
+	void ChatServer::End() {
 		packetManager->End();
 		IOCPEnd();
 		printf("Chat Server End...");
 	}
 
-	virtual void OnConnect(UINT32 clientIndex) {
+	void ChatServer::OnConnect(UINT32 clientIndex) {
 		printf("[ACCEPT]client index: %d\n", clientIndex);
 	}
 
-	virtual void OnReceive(UINT32 clientIndex, char* data, UINT16 size) {
+	void ChatServer::OnReceive(UINT32 clientIndex, char* data, UINT16 size) {
 		printf("[RECV]client index: %d, data size: %d\n", clientIndex, size);
 		packetManager->OnDataReceive(clientIndex, data, size);
 	}
 
-	virtual void OnSend(UINT32 clientIndex, UINT16 size) {
+	void ChatServer::OnSend(UINT32 clientIndex, UINT16 size) {
 		printf("[SEND]client index: %d, data size: %d\n", clientIndex, size);
 	}
 
-	virtual void OnDisconnect(UINT32 clientIndex) {
+	void ChatServer::OnDisconnect(UINT32 clientIndex) {
 		printf("[CLOSE]client index:%d\n", clientIndex);
 		DisconnectPacket pkt;
 		pkt.packetID = (UINT16)PACKET_ID::DISCONNECT;
 		pkt.packetSize = sizeof(DisconnectPacket);
 		packetManager->OnDataReceive(clientIndex, (char*)&pkt, sizeof(DisconnectPacket));
 	}
-};
+
+}

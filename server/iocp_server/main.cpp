@@ -5,7 +5,7 @@
 using namespace std;
 
 int main(void) {
-	ChatServer server;
+	ChatServerLib::ChatServer server;
 	server.Init();
 	server.Start();
 
