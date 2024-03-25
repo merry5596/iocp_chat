@@ -6,12 +6,12 @@ namespace ChatServerLib {
 		delete userManager;
 	}
 
-	void PacketManager::Init(const UINT16 clientPoolSize) {
+	void PacketManager::Init(ChatConfig* config) {
 		userManager = new UserManager;
-		userManager->Init(clientPoolSize);
+		userManager->Init(config->CLIENT_POOL_SIZE);
 
 		roomManager = new RoomManager;
-		roomManager->Init();
+		roomManager->Init(config->MAX_ROOM_CNT, config->MAX_ROOM_USER_CNT);
 
 		processFuncDic = unordered_map<UINT16, ProcessFunction>();
 		processFuncDic[(UINT16)PACKET_ID::ECHO_REQUEST] = &PacketManager::ProcessEchoRequest;

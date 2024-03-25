@@ -7,18 +7,19 @@ using namespace std;
 
 namespace ChatServerLib {
 
-	const UINT16 MAX_ROOM_CNT = 30;
-	const UINT16 MAX_ROOM_USER_CNT = 4;
-
 	class RoomManager {
 	private:
 		vector<Room*> roomList;
+		UINT16 maxRoomCnt;
+		UINT16 maxRoomUserCnt;
 
 	public:
-		void Init() {
-			roomList = vector<Room*>(MAX_ROOM_CNT + 1);
-			for (int i = 1; i <= MAX_ROOM_CNT; i++) {
-				roomList[i] = new Room(i, MAX_ROOM_USER_CNT);
+		void Init(const UINT16 maxRoomCnt, const UINT16 maxRoomUserCnt) {
+			this->maxRoomCnt = maxRoomCnt;
+			this->maxRoomUserCnt = maxRoomUserCnt;
+			roomList = vector<Room*>(maxRoomCnt + 1);
+			for (int i = 1; i <= maxRoomCnt; i++) {
+				roomList[i] = new Room(i, maxRoomUserCnt);
 			}
 		}
 
@@ -39,11 +40,11 @@ namespace ChatServerLib {
 		}
 
 		UINT16 FindOptimalRoomNum() {
-			UINT16 userCntMin = MAX_ROOM_USER_CNT;
+			UINT16 userCntMin = maxRoomUserCnt;
 			UINT16 userCntMinRN = 0;	//방배정 1순위 RoomNum
 			UINT16 userCntZeroRN = 0;	//방배정 2순위 RoomNum
 
-			for (int i = 1; i <= MAX_ROOM_CNT; i++) {
+			for (int i = 1; i <= maxRoomCnt; i++) {
 				int userCnt = roomList[i]->GetCurUserCnt();
 				if (userCnt == 0) {
 					if (userCntZeroRN == 0) {	//아직 zeroCntRoom 못찾음. 즉 최초 발견
@@ -55,7 +56,7 @@ namespace ChatServerLib {
 					userCntMinRN = i;
 				}
 			}
-			if (userCntMin == MAX_ROOM_USER_CNT) {
+			if (userCntMin == maxRoomUserCnt) {
 				if (userCntZeroRN == 0) {
 					return 0;	//모든 방이 꽉 찼다.
 				}
@@ -67,7 +68,7 @@ namespace ChatServerLib {
 		}
 
 		Room* GetRoom(UINT16 roomNum) {
-			if (roomNum < 1 || roomNum > MAX_ROOM_CNT) {
+			if (roomNum < 1 || roomNum > maxRoomCnt) {
 				return nullptr;
 			}
 			return roomList[roomNum];

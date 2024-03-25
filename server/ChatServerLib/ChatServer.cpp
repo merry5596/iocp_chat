@@ -3,14 +3,14 @@
 namespace ChatServerLib {
 
 	void ChatServer::Init() {
-		serverConfig = std::make_unique<ServerConfig>();
-		serverConfig->LoadConfig();
+		config = std::make_unique<ChatConfig>();
+		config->LoadConfig();
 
 		packetManager = std::make_unique<PacketManager>();
-		packetManager->Init(serverConfig->CLIENT_POOL_SIZE);
+		packetManager->Init(config.get());
 		packetManager->SendData = [&](UINT32 clientIndex, char* data, UINT16 size) { SendData(clientIndex, data, size); };
 
-		IOCPInit(serverConfig.get());
+		IOCPInit(config.get());
 	}
 
 	void ChatServer::Start() {

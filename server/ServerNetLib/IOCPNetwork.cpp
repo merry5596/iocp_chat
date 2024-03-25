@@ -9,7 +9,7 @@ namespace ServerNetLib {
 		}
 	}
 
-	bool IOCPNetwork::IOCPInit(ServerConfig* serverConfig) {
+	bool IOCPNetwork::IOCPInit(NetworkConfig* config) {
 		//Winsock 사용
 		WSAData wsaData;
 		int ret = WSAStartup(MAKEWORD(2, 2), &wsaData);	//2.2 버전으로 초기화, wsaData에 저장
@@ -28,7 +28,7 @@ namespace ServerNetLib {
 		//리슨 소켓 주소연결
 		SOCKADDR_IN addr;
 		addr.sin_family = AF_INET;
-		addr.sin_port = htons(serverConfig->SERVER_PORT);
+		addr.sin_port = htons(config->SERVER_PORT);
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		ret = bind(listenSocket, (const SOCKADDR*)&addr, (int)sizeof(SOCKADDR_IN));
 		if (ret != 0) {
@@ -37,14 +37,14 @@ namespace ServerNetLib {
 		}
 
 		//리슨 소켓 등록
-		ret = listen(listenSocket, serverConfig->BACK_LOG);
+		ret = listen(listenSocket, config->BACK_LOG);
 		if (ret != 0) {
 			printf("[ERROR]listen() error: %d", WSAGetLastError());
 			return false;
 		}
 
 		//IOCP 핸들러 생성
-		threadPoolSize = serverConfig->THREAD_POOL_SIZE;
+		threadPoolSize = config->THREAD_POOL_SIZE;
 		IOCPHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, threadPoolSize);
 		if (IOCPHandle == NULL) {
 			printf("[ERROR]CreateIoCompletionPort()(create) error: %d", WSAGetLastError());
@@ -57,8 +57,8 @@ namespace ServerNetLib {
 		}
 
 		//커넥션 풀 생성
-		clientPoolSize = serverConfig->CLIENT_POOL_SIZE;
-		CreateClientPool(clientPoolSize, serverConfig->BUFFER_SIZE);
+		clientPoolSize = config->CLIENT_POOL_SIZE;
+		CreateClientPool(clientPoolSize, config->BUFFER_SIZE);
 
 		return true;
 	}

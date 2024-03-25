@@ -9,7 +9,7 @@ namespace ChatServerLib {
 	class ChatServer : public ServerNetLib::IOCPNetwork {
 	private:
 		unique_ptr<PacketManager> packetManager;
-		unique_ptr<ServerConfig> serverConfig;
+		unique_ptr<ChatConfig> config;
 	public:
 		void Init();
 		void Start();

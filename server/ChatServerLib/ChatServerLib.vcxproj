@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChatServer.h" />
+    <ClInclude Include="ChatConfig.h" />
     <ClInclude Include="PacketManager.h" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="RoomManager.h" />

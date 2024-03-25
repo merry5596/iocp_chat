@@ -21,7 +21,7 @@
     <ClInclude Include="Define.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="ServerConfig.h">
+    <ClInclude Include="NetworkConfig.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

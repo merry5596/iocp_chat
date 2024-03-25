@@ -2,7 +2,7 @@
 
 #include "Define.h"
 #include "ClientConnection.h"
-#include "ServerConfig.h"
+#include "NetworkConfig.h"
 
 #include <vector>
 #include <thread>
@@ -27,7 +27,7 @@ namespace ServerNetLib {
 
 	public:
 		~IOCPNetwork();
-		bool IOCPInit(ServerConfig* serverConfig);
+		bool IOCPInit(NetworkConfig* config);
 		void IOCPStart();
 		void IOCPEnd();
 		void SendData(UINT32 clientIndex, char* data, UINT16 size);

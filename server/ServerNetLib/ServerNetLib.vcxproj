@@ -144,7 +144,7 @@
   <ItemGroup>
     <ClInclude Include="Define.h" />
     <ClInclude Include="IOCPNetwork.h" />
-    <ClInclude Include="ServerConfig.h" />
+    <ClInclude Include="NetworkConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClientConnection.cpp" />

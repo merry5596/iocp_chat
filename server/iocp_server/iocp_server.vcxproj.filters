@@ -4,6 +4,6 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ServerConfig.ini" />
+    <None Include="config.ini" />
   </ItemGroup>
 </Project>
