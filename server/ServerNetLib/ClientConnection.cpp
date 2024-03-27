@@ -86,16 +86,25 @@ namespace ServerNetLib {
 		sendOverlappedEx->clientIndex = index;
 		sendOverlappedEx->wsaBuf.len = size;
 		sendOverlappedEx->wsaBuf.buf = sendBuffer;
-
-		lock_guard<mutex> lock(sendMtx);
+		
+		bool nowSend = false;
+		sendMtx.lock();
 		sendingQueue.push(sendOverlappedEx);
 		if (sendingQueue.size() == 1) {
+			nowSend = true;
+		}
+		sendMtx.unlock();
+		if (nowSend) {
 			PostSend();
 		}
+		
 	}
 
 	void ClientConnection::PostSend() {	//SenderThread가 접근. 함수 호출 전부터 뮤텍스 걸려있는 상태
-		auto sendOverlappedEx = sendingQueue.front();
+		sendMtx.lock();
+		WSAOverlappedEx* sendOverlappedEx = sendingQueue.front();
+		sendMtx.unlock();
+
 		DWORD bufCnt = 1;	//버퍼 개수. 일반적으로 1개로 설정
 		DWORD bytes = 0;
 		DWORD flags = 0;
@@ -106,13 +115,19 @@ namespace ServerNetLib {
 	}
 
 	void ClientConnection::SendCompleted() {	//workerThread가 접근
-		lock_guard<mutex> lock(sendMtx);
+		sendMtx.lock();
 		auto completedObj = sendingQueue.front();
 		delete completedObj->wsaBuf.buf;
 		delete completedObj;
 
 		sendingQueue.pop();
+		bool nowSend = false;
 		if (sendingQueue.size() == 1) {
+			nowSend = true;
+		}
+		sendMtx.unlock();
+
+		if (nowSend) {
 			PostSend();
 		}
 	}
