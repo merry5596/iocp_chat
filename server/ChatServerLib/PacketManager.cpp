@@ -76,7 +76,6 @@ namespace ChatServerLib {
 	}
 
 	void PacketManager::ProcessPacket(PacketInfo pktInfo) {
-		//printf("pktInfo.packetID: %d", pktInfo.packetID);
 		auto iter = processFuncDic.find(pktInfo.packetID);
 		if (iter != processFuncDic.end())
 		{
@@ -90,7 +89,8 @@ namespace ChatServerLib {
 		resPkt.packetID = (UINT16)PACKET_ID::ECHO_RESPONSE;
 		resPkt.packetSize = sizeof(EchoResponsePacket);
 		strcpy_s(resPkt.msg, ECHO_MSG_LEN, reqPkt->msg);
-		cout << "[ECHO RES]" << endl;
+		spdlog::info("[ECHO RES]");
+		//cout << "[ECHO RES]" << endl;
 		SendData(clientIndex, (char*)&resPkt, size);
 	}
 
@@ -109,8 +109,8 @@ namespace ChatServerLib {
 			resPkt.result = ERROR_CODE::NONE;
 			strcpy_s(resPkt.name, NAME_LEN, reqPkt->name);
 		}
-
-		cout << "[LOGIN RES]" << endl;
+		spdlog::info("[LOGIN RES]");
+		//cout << "[LOGIN RES]" << endl;
 		SendData(clientIndex, (char*)&resPkt, sizeof(LoginResponsePacket));
 	}
 
@@ -165,13 +165,14 @@ namespace ChatServerLib {
 			unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(resPkt.roomNum);
 			for (auto receiverIndex : allUsers) {
 				if (receiverIndex != clientIndex) {
-					cout << "[ROOM ENTER NTF]" << endl;
+					spdlog::info("[ROOM ENTER NTF]");
+					//cout << "[ROOM ENTER NTF]" << endl;
 					SendData(receiverIndex, (char*)&ntfPkt, sizeof(RoomEnterNotifyPacket));
 				}
 			}
 		}
-		
-		cout << "[ROOM ENTER RES]" << endl;
+		spdlog::info("[ROOM ENTER RES]");
+		//cout << "[ROOM ENTER RES]" << endl;
 		SendData(clientIndex, (char*)&resPkt, sizeof(RoomEnterResponsePacket));
 	}
 
@@ -203,13 +204,14 @@ namespace ChatServerLib {
 			unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(roomNum);
 			for (auto receiverIndex : allUsers) {
 				if (receiverIndex != clientIndex) {
-					cout << "[ROOM LEAVE NTF]" << endl;
+					spdlog::info("[ROOM LEAVE NTF]");
+					//cout << "[ROOM LEAVE NTF]" << endl;
 					SendData(receiverIndex, (char*)&ntfPkt, sizeof(RoomLeaveNotifyPacket));
 				}
 			}
 		}
-
-		cout << "[ROOM LEAVE RES]" << endl;
+		spdlog::info("[ROOM LEAVE RES]");
+		//cout << "[ROOM LEAVE RES]" << endl;
 		SendData(clientIndex, (char*)&resPkt, sizeof(RoomLeaveResponsePacket));
 	}
 
@@ -227,7 +229,8 @@ namespace ChatServerLib {
 		unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(roomNum);
 		for (auto receiverIndex : allUsers) {
 			if (receiverIndex != clientIndex) {
-				cout << "[CHAT NTF]" << endl;
+				spdlog::info("[CHAT NTF]");
+				//cout << "[CHAT NTF]" << endl;
 				SendData(receiverIndex, (char*)&ntfPkt, sizeof(ChatNotifyPacket));
 			}
 		}
@@ -237,7 +240,8 @@ namespace ChatServerLib {
 		resPkt.packetSize = sizeof(ChatResponsePacket);
 		resPkt.result = ERROR_CODE::NONE;
 
-		cout << "[CHAT RES]" << endl;
+		spdlog::info("[CHAT RES]");
+		//cout << "[CHAT RES]" << endl;
 		SendData(clientIndex, (char*)&resPkt, sizeof(ChatResponsePacket));
 	}
 

@@ -6,6 +6,10 @@
 #include <ws2tcpip.h>	//ipv6
 #include <mswsock.h>	//AcceptEx
 
+#define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
+
 namespace ServerNetLib {
 	enum class IOOperation {
 		ACCEPT,

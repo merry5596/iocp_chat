@@ -14,14 +14,16 @@ namespace ServerNetLib {
 		WSAData wsaData;
 		int ret = WSAStartup(MAKEWORD(2, 2), &wsaData);	//2.2 버전으로 초기화, wsaData에 저장
 		if (ret != 0) {
-			printf("[ERROR]WSAStartup() error: %d", WSAGetLastError());
+			spdlog::error("[ERROR]WSAStartup() error: {}", WSAGetLastError());
+			//printf("[ERROR]WSAStartup() error: %d", WSAGetLastError());
 			return false;
 		}
 
 		//리슨 소켓 생성
 		listenSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 		if (listenSocket == INVALID_SOCKET) {
-			printf("[ERROR]WSASocket() error: %d", WSAGetLastError());
+			spdlog::error("[ERROR]WSASocket() error: {}", WSAGetLastError());
+			//printf("[ERROR]WSASocket() error: %d", WSAGetLastError());
 			return false;
 		}
 
@@ -32,14 +34,16 @@ namespace ServerNetLib {
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		ret = bind(listenSocket, (const SOCKADDR*)&addr, (int)sizeof(SOCKADDR_IN));
 		if (ret != 0) {
-			printf("[ERROR]bind() error: %d", WSAGetLastError());
+			spdlog::error("[ERROR]bind() error: {}", WSAGetLastError());
+			//printf("[ERROR]bind() error: %d", WSAGetLastError());
 			return false;
 		}
 
 		//리슨 소켓 등록
 		ret = listen(listenSocket, config->BACK_LOG);
 		if (ret != 0) {
-			printf("[ERROR]listen() error: %d", WSAGetLastError());
+			spdlog::error("[ERROR]listen() error: {}", WSAGetLastError());
+			//printf("[ERROR]listen() error: %d", WSAGetLastError());
 			return false;
 		}
 
@@ -47,13 +51,15 @@ namespace ServerNetLib {
 		threadPoolSize = config->THREAD_POOL_SIZE;
 		IOCPHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, threadPoolSize);
 		if (IOCPHandle == NULL) {
-			printf("[ERROR]CreateIoCompletionPort()(create) error: %d", WSAGetLastError());
+			spdlog::error("[ERROR]CreateIoCompletionPort() error: {}", WSAGetLastError());
+			//printf("[ERROR]CreateIoCompletionPort()(create) error: %d", WSAGetLastError());
 		}
 
 		//IOCP 핸들러에 소켓 등록(GQCS 받겠다)
 		HANDLE retHandle = CreateIoCompletionPort((HANDLE)listenSocket, IOCPHandle, 0, 0);
 		if (retHandle == NULL) {
-			printf("[ERROR]CreateIoCompletionPort()(bind listener) error: %d", WSAGetLastError());
+			spdlog::error("[ERROR]CreateIoCompletionPort()(bind listener) error: {}", WSAGetLastError());
+			//printf("[ERROR]CreateIoCompletionPort()(bind listener) error: %d", WSAGetLastError());
 		}
 
 		//커넥션 풀 생성
@@ -146,7 +152,9 @@ namespace ServerNetLib {
 				client->SendCompleted();
 			}
 			else {
-				printf("[EXCEPTION]client index: %d\n", wsaOverlappedEx->clientIndex);
+				spdlog::error("[EXCEPTION]client index: {}", wsaOverlappedEx->clientIndex);
+				//printf("[EXCEPTION]client index: %d\n", wsaOverlappedEx->clientIndex);
+
 			}
 		}
 	}

@@ -21,7 +21,8 @@ namespace ServerNetLib {
 	bool ClientConnection::PostAccept(SOCKET listenSocket) {	//AccepterThread에서 접근(단일스레드)
 		acceptSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 		if (acceptSocket == INVALID_SOCKET) {
-			printf("[ERROR]WSASocket() error: %d\n", WSAGetLastError());
+			spdlog::error("[ERROR]WSASocket() error: {}", WSAGetLastError());
+			//printf("[ERROR]WSASocket() error: %d\n", WSAGetLastError());
 			return false;
 		}
 
@@ -34,7 +35,8 @@ namespace ServerNetLib {
 		acceptOverlappedEx.wsaBuf.buf = nullptr;
 		bool ret = AcceptEx(listenSocket, acceptSocket, acceptBuffer, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, &bytes, (LPOVERLAPPED)&acceptOverlappedEx);
 		if (ret == false && WSAGetLastError() != ERROR_IO_PENDING) {
-			printf("[ERROR]AcceptEx() error: %d\n", WSAGetLastError());
+			spdlog::error("[ERROR]AcceptEx() error: {}", WSAGetLastError());
+			//printf("[ERROR]AcceptEx() error: %d\n", WSAGetLastError());
 			return false;
 		}
 		status = (UINT16)CONNECTION_STATUS::WAITING_FOR_ACCEPT;
@@ -45,7 +47,8 @@ namespace ServerNetLib {
 	bool ClientConnection::ConnectIOCP(HANDLE IOCPHandle) {
 		auto retHandle = CreateIoCompletionPort((HANDLE)acceptSocket, IOCPHandle, (ULONG_PTR)this, 0);
 		if (retHandle == NULL) {
-			printf("[ERROR]CreateIoCompletionPort()(bind accepter) error: %d\n", WSAGetLastError());
+			spdlog::error("[ERROR]CreateIoCompletionPort()(bind accepter) error: {}", WSAGetLastError());
+			//printf("[ERROR]CreateIoCompletionPort()(bind accepter) error: %d\n", WSAGetLastError());
 			return false;
 		}
 
@@ -69,7 +72,8 @@ namespace ServerNetLib {
 		recvOverlappedEx.wsaBuf.buf = recvBuffer;
 		int ret = WSARecv(acceptSocket, &(recvOverlappedEx.wsaBuf), bufCnt, &bytes, &flags, (LPWSAOVERLAPPED)&recvOverlappedEx, NULL);
 		if (ret != 0 && WSAGetLastError() != ERROR_IO_PENDING) {
-			printf("[ERROR]WSARecv() error: %d\n", WSAGetLastError());
+			spdlog::error("[ERROR]WSARecv() error: {}", WSAGetLastError());
+			//printf("[ERROR]WSARecv() error: %d\n", WSAGetLastError());
 			return false;
 		}
 		status = (UINT16)CONNECTION_STATUS::CONNECTING;
@@ -110,7 +114,8 @@ namespace ServerNetLib {
 		DWORD flags = 0;
 		int ret = WSASend(acceptSocket, &(sendOverlappedEx->wsaBuf), bufCnt, &bytes, flags, (LPWSAOVERLAPPED)sendOverlappedEx, NULL);
 		if (ret != 0 && WSAGetLastError() != ERROR_IO_PENDING) {
-			printf("[ERROR]WSASend() error: %d\n", WSAGetLastError());
+			spdlog::error("[ERROR]WSASend() error: {}", WSAGetLastError());
+			//printf("[ERROR]WSASend() error: %d\n", WSAGetLastError());
 		}
 	}
 
