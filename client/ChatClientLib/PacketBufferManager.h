@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Define.h"
 #include "ErrorCode.h"
 #include "Packet.h"
 #include "UserInfo.h"

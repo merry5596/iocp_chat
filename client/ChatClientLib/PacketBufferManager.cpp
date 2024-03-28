@@ -75,6 +75,7 @@ namespace ChatClientLib {
 		}
 		CopyMemory(&packetBuffer[writePos], data, size);
 		writePos += size;
+		spdlog::debug("쓰기완료. writePos: {0}, readPos: {1}", writePos, readPos);
 		//printf("쓰기완료. writePos: %d, readPos: %d", writePos, readPos);
 	}
 
@@ -96,16 +97,19 @@ namespace ChatClientLib {
 		{
 			auto noReadDataSize = writePos - readPos;
 			if (noReadDataSize < HEADER_SIZE) {	//헤더조차 다 안 온 상태
+				spdlog::debug("헤더 안옴");
 				//cout << "[ERROR]헤더안옴" << endl;
 				return false;
 			}
 			header = (PACKET_HEADER*)&packetBuffer[readPos];
 			if (header->packetID < (UINT16)PACKET_ID::LOGIN_RESPONSE) {
+				spdlog::error("응답 패킷이 아님");
 				//cout << "[ERROR]ProcessBuffer(): 응답 패킷이 아님" << endl;
 				return false;
 			}
 
 			if (noReadDataSize < header->packetSize) {	//전체 패킷 덜 옴
+				spdlog::debug("바디 덜옴. 와야할 패킷사이즈는 {0} 인데, 읽고자 하는 버퍼 사이즈는 {1}\n", header->packetSize, noReadDataSize);
 				//printf("body 덜옴. 와야할 패킷사이즈는 %d 인데, 읽고자 하는 버퍼 사이즈는 %d\n", header->packetSize, noReadDataSize);
 				return false;
 			}
@@ -119,7 +123,7 @@ namespace ChatClientLib {
 		{
 			(this->*(iter->second))(&packetBuffer[pktStartPos]);
 		}
-
+		spdlog::debug("읽기완료. writePos: {0}, readPos: {1}", writePos, readPos);
 		//printf("읽기완료. writePos: %d, readPos: %d\n", writePos, readPos);
 		return true;
 	}
@@ -128,11 +132,13 @@ namespace ChatClientLib {
 	void PacketBufferManager::ProcessLoginResponse(char* pkt) {
 		LoginResponsePacket* resPkt = reinterpret_cast<LoginResponsePacket*>(pkt);
 		if (resPkt->result == ERROR_CODE::ALREADY_EXIST_NAME) {
-			cout << "이미 존재하는 닉네임입니다." << endl;
+			spdlog::debug("이미 존재하는 닉네임");
+			//cout << "이미 존재하는 닉네임입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
 			userInfo->Login(resPkt->name);
-			cout << resPkt->name << "님 로그인 성공" << endl;
+			spdlog::debug("{}님 로그인 성공", resPkt->name);
+			//cout << resPkt->name << "님 로그인 성공" << endl;
 		}
 
 		loginResult = resPkt->result;
@@ -142,17 +148,21 @@ namespace ChatClientLib {
 	void PacketBufferManager::ProcessRoomEnterResponse(char* pkt) {
 		RoomEnterResponsePacket* resPkt = reinterpret_cast<RoomEnterResponsePacket*>(pkt);
 		if (resPkt->result == ERROR_CODE::USER_STATE_ERROR) {
-			cout << "입장할 수 없는 상태입니다." << endl;
+			spdlog::debug("사용자 상태 이상. 입장 불가");
+			//cout << "입장할 수 없는 상태입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::INVALID_ROOM_NUM) {
-			cout << "없는 방 번호입니다." << endl;
+			spdlog::debug("없는 방 번호");
+			//cout << "없는 방 번호입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::ROOM_FULL) {
-			cout << "해당 방은 인원이 모두 찼습니다." << endl;
+			spdlog::debug("인원 모두 찼음");
+			//cout << "해당 방은 인원이 모두 찼습니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
 			userInfo->EnterRoom(resPkt->roomNum);
-			cout << resPkt->roomNum << "번 방에 입장합니다." << endl;
+			spdlog::debug("{}번 방 입장", resPkt->roomNum);
+			//cout << resPkt->roomNum << "번 방에 입장합니다." << endl;
 		}
 
 		roomEnterResult = resPkt->result;
@@ -162,11 +172,13 @@ namespace ChatClientLib {
 	void PacketBufferManager::ProcessRoomLeaveResponse(char* pkt) {
 		RoomLeaveResponsePacket* resPkt = reinterpret_cast<RoomLeaveResponsePacket*>(pkt);
 		if (resPkt->result == ERROR_CODE::USER_STATE_ERROR) {
-			cout << "퇴장할 수 없는 상태입니다." << endl;
+			spdlog::debug("사용자 상태 이상. 퇴장 불가");
+			//cout << "퇴장할 수 없는 상태입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
 			userInfo->LeaveRoom();
-			cout << "방을 퇴장합니다." << endl;
+			spdlog::debug("방 퇴장");
+			//cout << "방을 퇴장합니다." << endl;
 		}
 		roomLeaveResult = resPkt->result;
 		isRoomLeaveResCompleted = true;
@@ -174,31 +186,36 @@ namespace ChatClientLib {
 
 	void PacketBufferManager::ProcessEchoResponse(char* pkt) {
 		EchoResponsePacket* resPkt = reinterpret_cast<EchoResponsePacket*>(pkt);
-		cout << "Server : " << resPkt->msg << endl;;
+		spdlog::info("Server : {}", resPkt->msg);
+		//cout << "Server : " << resPkt->msg << endl;;
 	}
 
 	void PacketBufferManager::ProcessChatResponse(char* pkt) {
 		ChatResponsePacket* resPkt = reinterpret_cast<ChatResponsePacket*>(pkt);
 		if (resPkt->result != ERROR_CODE::NONE) {
-			cout << "ProcessChatResponse() Error: " << resPkt->result << endl;
+			spdlog::error("[ERROR]ProcessChatResponse() Error: {}", resPkt->result);
+			//cout << "ProcessChatResponse() Error: " << resPkt->result << endl;
 		}
 	}
 
 	void PacketBufferManager::ProcessChatNotify(char* pkt) {
 		ChatNotifyPacket* ntfPkt = reinterpret_cast<ChatNotifyPacket*>(pkt);
-		cout << ntfPkt->name << " : " << ntfPkt->msg << endl;
+		spdlog::info("{0} : {1}", ntfPkt->name, ntfPkt->msg);
+		//cout << ntfPkt->name << " : " << ntfPkt->msg << endl;
 		notifyManager->AddChatNotify(ntfPkt->name, ntfPkt->msg);
 	}
 
 	void PacketBufferManager::ProcessRoomEnterNotify(char* pkt) {
 		RoomEnterNotifyPacket* ntfPkt = reinterpret_cast<RoomEnterNotifyPacket*>(pkt);
-		cout << ntfPkt->name << "님이 방에 입장하셨습니다." << endl;
+		spdlog::info("{}님 방 입장", ntfPkt->name);
+		//cout << ntfPkt->name << "님이 방에 입장하셨습니다." << endl;
 		notifyManager->AddRoomEnterNotify(ntfPkt->name);
 	}
 
 	void PacketBufferManager::ProcessRoomLeaveNotify(char* pkt) {
 		RoomLeaveNotifyPacket* ntfPkt = reinterpret_cast<RoomLeaveNotifyPacket*>(pkt);
-		cout << ntfPkt->name << "님이 방에서 퇴장하셨습니다." << endl;
+		spdlog::info("{}님 방 퇴장", ntfPkt->name);
+		//cout << ntfPkt->name << "님이 방에서 퇴장하셨습니다." << endl;
 		notifyManager->AddRoomLeaveNotify(ntfPkt->name);
 	}
 

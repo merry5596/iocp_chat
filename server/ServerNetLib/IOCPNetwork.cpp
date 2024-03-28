@@ -153,8 +153,6 @@ namespace ServerNetLib {
 			}
 			else {
 				spdlog::error("[EXCEPTION]client index: {}", wsaOverlappedEx->clientIndex);
-				//printf("[EXCEPTION]client index: %d\n", wsaOverlappedEx->clientIndex);
-
 			}
 		}
 	}

@@ -52,5 +52,4 @@ namespace ChatServerLib {
 		void ProcessRoomLeaveRequest(UINT32 clientIndex, char* data, UINT16 size);
 		void ProcessChatRequest(UINT32 clientIndex, char* data, UINT16 size);
 	};
-
 }

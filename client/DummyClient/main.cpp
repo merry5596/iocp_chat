@@ -12,7 +12,8 @@ void DummyThread() {
 	ChatClientLib::ChatManager chatManager;
 	bool ret = chatManager.Init(SERVER_PORT, SERVER_IP);
 	if (ret == false) {
-		cout << "[ERROR]chatManager Init()" << endl;
+		spdlog::error("[ERROR]chatManager Init()");
+		//cout << "[ERROR]chatManager Init()" << endl;
 		return;
 	}
 
@@ -25,7 +26,7 @@ void DummyThread() {
 		// 난수 생성
 		random_device rd;
 		mt19937 gen(rd());
-		uniform_int_distribution<> dis(1, 400);
+		uniform_int_distribution<> dis(1, 5000);
 		int randomNumber = dis(gen);
 		name = to_string(randomNumber);
 		this_thread::sleep_for(chrono::seconds(1));
@@ -39,7 +40,7 @@ void DummyThread() {
 		// 난수 생성
 		random_device rd;
 		mt19937 gen(rd());
-		uniform_int_distribution<> dis(1, 40);
+		uniform_int_distribution<> dis(1, 550);
 		roomNum = dis(gen);
 		this_thread::sleep_for(chrono::seconds(1));
 		result = chatManager.EnterRoom(roomNum);
@@ -65,22 +66,21 @@ void DummyThread() {
 }
 
 int main(void) {
+//	auto file_logger = spdlog::basic_logger_mt("file_logger", "logs/logfile.txt");
+//	spdlog::set_default_logger(file_logger);
+	spdlog::set_level(spdlog::level::warn);
+
 	vector<thread> dummyThreadPool;
 	isDummyRun = true;
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 1000; i++) {
 		dummyThreadPool.emplace_back([]() { DummyThread(); });
-		this_thread::sleep_for(chrono::milliseconds(200));
-	}
-	this_thread::sleep_for(chrono::seconds(5));
-	for (int i = 0; i < 100; i++) {
-		dummyThreadPool.emplace_back([]() { DummyThread(); });
-		this_thread::sleep_for(chrono::milliseconds(200));
+		this_thread::sleep_for(chrono::milliseconds(1));
 	}
 
 	int a;
 	cin >> a;
 	isDummyRun = false;
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 1000; i++) {
 		if (dummyThreadPool[i].joinable()) {
 			dummyThreadPool[i].join();
 		}
