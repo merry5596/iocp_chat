@@ -18,16 +18,17 @@
 - ClientNetLib: 소켓 통신과 관련된 일을 하는 정적 라이브러리
 - ChatClientLib: 채팅과 관련된 패킷을 서버에 요청하고 응답을 받아 처리하는 일을 하는 정적 라이브러리
 - iocp_client: 라이브러리를 사용하는 콘솔 프로그램
+- DummyClient: 주기적으로 서버에 패킷을 보내는 N개의 스레드를 실행하는 콘솔 프로그램
 
 ## Common
-- ErrorCode, Packet 관련 정의
+- Server, Client가 공유하는 ErrorCode, Packet 관련 정의
 
 ## thirdparty
-- 외부 라이브러리
+- 외부 라이브러리: spdlog
 
 
 # 주요 특징
-- IOCP, 비동기 함수 사용: AcceptEx, WSARecv, WSASend)
+- IOCP, 비동기 함수 사용: AcceptEx, WSARecv, WSASend
 - Worker Thread 6개: Recv(4), Accept(1), Packet Process(1)
 
 
@@ -35,5 +36,5 @@
 
 
 # 성능
-- DummyClient: 주기적으로 서버에 패킷을 보내는 1000개 스레드를 실행
 - 콘솔 출력에 따른 지연 시간 줄이기 위해 spdlog 라이브러리를 활용하여 파일에 로깅
+- DummyClient 스레드 5000개 실행 테스트
