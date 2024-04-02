@@ -113,7 +113,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\iocp\thirdparty\spdlog-1.x\include;C:\iocp\common\CommonLib;C:\iocp\client\ClientNetLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\thirdparty\spdlog-1.x\include;..\..\common\CommonLib;..\ClientNetLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>

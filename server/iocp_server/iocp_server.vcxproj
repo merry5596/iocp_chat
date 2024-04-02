@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\iocp\thirdparty\spdlog-1.x\include;C:\iocp\server\ChatServerLib;C:\iocp\server\ServerNetLib;C:\iocp\common\CommonLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\thirdparty\spdlog-1.x\include;..\ChatServerLib;..\ServerNetLib;..\..\common\CommonLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>

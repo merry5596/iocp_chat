@@ -108,7 +108,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\iocp\thirdparty\spdlog-1.x\include;C:\iocp\common\CommonLib;C:\iocp\client\ClientNetLib;C:\iocp\client\ChatClientLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\thirdparty\spdlog-1.x\include;..\..\common\CommonLib;..\ClientNetLib;..\ChatClientLib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

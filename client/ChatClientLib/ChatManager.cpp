@@ -22,12 +22,10 @@ namespace ChatClientLib {
 	void ChatManager::OnReceive(char* data, UINT16 size, bool errflag, UINT32 err) {
 		if (errflag) {
 			spdlog::info("서버 통신 종료");
-			//printf("서버 통신 종료\n");
 			notifyManager->AddDisconnectNotify();
 		}
 		else {
-			spdlog::info("[RECV] size: {}", size);
-			//printf("[RECV] size: %d\n", size);
+			spdlog::debug("[RECV] size: {}", size);
 			packetBufferManager->OnDataReceive(data, size);
 		}
 	}
@@ -35,11 +33,9 @@ namespace ChatClientLib {
 	void ChatManager::OnSend(char* data, UINT16 size, bool errflag, UINT32 err) {
 		if (errflag) {
 			spdlog::error("error : {}", err);
-			//printf("error: %d\n", err);
 		}
 		else {
-			spdlog::info("[SEND] size: {}", size);
-			//printf("[SEND] size: %d\n", size);
+			spdlog::debug("[SEND] size: {}", size);
 		}
 	}
 

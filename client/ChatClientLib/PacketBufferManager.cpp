@@ -132,12 +132,12 @@ namespace ChatClientLib {
 	void PacketBufferManager::ProcessLoginResponse(char* pkt) {
 		LoginResponsePacket* resPkt = reinterpret_cast<LoginResponsePacket*>(pkt);
 		if (resPkt->result == ERROR_CODE::ALREADY_EXIST_NAME) {
-			spdlog::debug("이미 존재하는 닉네임");
+			spdlog::info("이미 존재하는 닉네임");
 			//cout << "이미 존재하는 닉네임입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
 			userInfo->Login(resPkt->name);
-			spdlog::debug("{}님 로그인 성공", resPkt->name);
+			spdlog::info("{}님 로그인 성공", resPkt->name);
 			//cout << resPkt->name << "님 로그인 성공" << endl;
 		}
 
@@ -148,20 +148,20 @@ namespace ChatClientLib {
 	void PacketBufferManager::ProcessRoomEnterResponse(char* pkt) {
 		RoomEnterResponsePacket* resPkt = reinterpret_cast<RoomEnterResponsePacket*>(pkt);
 		if (resPkt->result == ERROR_CODE::USER_STATE_ERROR) {
-			spdlog::debug("사용자 상태 이상. 입장 불가");
+			spdlog::info("사용자 상태 이상. 입장 불가");
 			//cout << "입장할 수 없는 상태입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::INVALID_ROOM_NUM) {
-			spdlog::debug("없는 방 번호");
+			spdlog::info("없는 방 번호");
 			//cout << "없는 방 번호입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::ROOM_FULL) {
-			spdlog::debug("인원 모두 찼음");
+			spdlog::info("인원 모두 찼음");
 			//cout << "해당 방은 인원이 모두 찼습니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
 			userInfo->EnterRoom(resPkt->roomNum);
-			spdlog::debug("{}번 방 입장", resPkt->roomNum);
+			spdlog::info("{}번 방 입장", resPkt->roomNum);
 			//cout << resPkt->roomNum << "번 방에 입장합니다." << endl;
 		}
 
@@ -172,12 +172,12 @@ namespace ChatClientLib {
 	void PacketBufferManager::ProcessRoomLeaveResponse(char* pkt) {
 		RoomLeaveResponsePacket* resPkt = reinterpret_cast<RoomLeaveResponsePacket*>(pkt);
 		if (resPkt->result == ERROR_CODE::USER_STATE_ERROR) {
-			spdlog::debug("사용자 상태 이상. 퇴장 불가");
+			spdlog::info("사용자 상태 이상. 퇴장 불가");
 			//cout << "퇴장할 수 없는 상태입니다." << endl;
 		}
 		if (resPkt->result == ERROR_CODE::NONE) {
 			userInfo->LeaveRoom();
-			spdlog::debug("방 퇴장");
+			spdlog::info("방 퇴장");
 			//cout << "방을 퇴장합니다." << endl;
 		}
 		roomLeaveResult = resPkt->result;
@@ -187,21 +187,18 @@ namespace ChatClientLib {
 	void PacketBufferManager::ProcessEchoResponse(char* pkt) {
 		EchoResponsePacket* resPkt = reinterpret_cast<EchoResponsePacket*>(pkt);
 		spdlog::info("Server : {}", resPkt->msg);
-		//cout << "Server : " << resPkt->msg << endl;;
 	}
 
 	void PacketBufferManager::ProcessChatResponse(char* pkt) {
 		ChatResponsePacket* resPkt = reinterpret_cast<ChatResponsePacket*>(pkt);
 		if (resPkt->result != ERROR_CODE::NONE) {
 			spdlog::error("[ERROR]ProcessChatResponse() Error: {}", resPkt->result);
-			//cout << "ProcessChatResponse() Error: " << resPkt->result << endl;
 		}
 	}
 
 	void PacketBufferManager::ProcessChatNotify(char* pkt) {
 		ChatNotifyPacket* ntfPkt = reinterpret_cast<ChatNotifyPacket*>(pkt);
 		spdlog::info("{0} : {1}", ntfPkt->name, ntfPkt->msg);
-		//cout << ntfPkt->name << " : " << ntfPkt->msg << endl;
 		notifyManager->AddChatNotify(ntfPkt->name, ntfPkt->msg);
 	}
 

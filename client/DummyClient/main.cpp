@@ -1,19 +1,20 @@
 #include "ChatManager.h"
 
-#include <ctime>
-#include <random>
-
 const UINT16 SERVER_PORT = 11021;
 const char* SERVER_IP = "127.0.0.1";
+const int num_threads = 1000;
+const int roomMax = 500;
 
-bool isDummyRun;
+int cnt = 0;
+bool isAllFinished = false;
+mutex mtx;
 
-void DummyThread() {
+void DummyThreadEternalChat(UINT16 nameNum, UINT16 roomNum) {
 	ChatClientLib::ChatManager chatManager;
+
 	bool ret = chatManager.Init(SERVER_PORT, SERVER_IP);
 	if (ret == false) {
 		spdlog::error("[ERROR]chatManager Init()");
-		//cout << "[ERROR]chatManager Init()" << endl;
 		return;
 	}
 
@@ -22,65 +23,88 @@ void DummyThread() {
 	//닉네임 설정(로그인)
 	string name;
 	UINT16 result;
-	do {
-		// 난수 생성
-		random_device rd;
-		mt19937 gen(rd());
-		uniform_int_distribution<> dis(1, 5000);
-		int randomNumber = dis(gen);
-		name = to_string(randomNumber);
-		this_thread::sleep_for(chrono::seconds(1));
-		result = chatManager.Login(name.c_str());
-	} while (result != (UINT16)ERROR_CODE::NONE);
-
-	//방 입장
-	while (isDummyRun)
-	{
-		INT16 roomNum;
-		// 난수 생성
-		random_device rd;
-		mt19937 gen(rd());
-		uniform_int_distribution<> dis(1, 550);
-		roomNum = dis(gen);
-		this_thread::sleep_for(chrono::seconds(1));
-		result = chatManager.EnterRoom(roomNum);
-		if (result != (UINT16)ERROR_CODE::NONE) {
-			continue;
-		}
-
-		//채팅 입력
-		//난수 생성
-		uniform_int_distribution<> dis2(1, 40);
-		int chatCnt = dis2(gen);
-		string msg;
-		for (int i = 0; i < chatCnt; i++) {
-			msg = to_string(i);
-			this_thread::sleep_for(chrono::seconds(3));
-			chatManager.ChatMsg(msg.c_str());
-		}
-		this_thread::sleep_for(chrono::milliseconds(500));
-		chatManager.LeaveRoom();
+	name = to_string(nameNum);
+	this_thread::sleep_for(chrono::milliseconds(500));
+	result = chatManager.Login(name.c_str());
+	if (result != (UINT16)ERROR_CODE::NONE) {
+		spdlog::error("Login() error: {}", result);
 	}
 
+	this_thread::sleep_for(chrono::milliseconds(500));
+	result = chatManager.EnterRoom(roomNum);
+	if (result != (UINT16)ERROR_CODE::NONE) {
+		spdlog::error("EnterRoom() error: {}", result);
+	}
+
+	//채팅 입력
+	string msg = "hello";
+	while (true) {
+		this_thread::sleep_for(chrono::milliseconds(500));
+		chatManager.ChatMsg(msg.c_str());
+	}
+}
+
+void DummyThreadInTime(UINT16 nameNum, UINT16 roomNum) {
+	ChatClientLib::ChatManager chatManager;
+	bool ret = chatManager.Init(SERVER_PORT, SERVER_IP);
+	if (ret == false) {
+		spdlog::error("[ERROR]chatManager Init()");
+		return;
+	}
+
+	chatManager.Start();
+
+	//닉네임 설정(로그인)
+	string name;
+	UINT16 result;
+	name = to_string(nameNum);
+	this_thread::sleep_for(chrono::milliseconds(500));
+	result = chatManager.Login(name.c_str());
+	if (result != (UINT16)ERROR_CODE::NONE) {
+		spdlog::error("Login() error: {}", result);
+	}
+
+	this_thread::sleep_for(chrono::milliseconds(500));
+	result = chatManager.EnterRoom(roomNum);
+	if (result != (UINT16)ERROR_CODE::NONE) {
+		spdlog::error("EnterRoom() error: {}", result);
+	}
+
+	//채팅 입력
+	string msg = "hello";
+	for (int i = 0; i < 10; i++) {
+		this_thread::sleep_for(chrono::milliseconds(500));
+		chatManager.ChatMsg(msg.c_str());
+	}
+	this_thread::sleep_for(chrono::seconds(1));
+	chatManager.LeaveRoom();
+	this_thread::sleep_for(chrono::milliseconds(500));
 	chatManager.End();
+	{
+		lock_guard<mutex> lock(mtx);
+		cnt++;
+		if (cnt == num_threads) {
+			isAllFinished = true;
+		}
+	}
 }
 
 int main(void) {
-//	auto file_logger = spdlog::basic_logger_mt("file_logger", "logs/logfile.txt");
-//	spdlog::set_default_logger(file_logger);
-	spdlog::set_level(spdlog::level::warn);
+	auto file_logger = spdlog::basic_logger_mt("file_logger", "logs/logfile.txt");
+	spdlog::set_default_logger(file_logger);
+	spdlog::set_level(spdlog::level::info);
 
+	spdlog::info("Dummy threads start!");
 	vector<thread> dummyThreadPool;
-	isDummyRun = true;
-	for (int i = 0; i < 1000; i++) {
-		dummyThreadPool.emplace_back([]() { DummyThread(); });
-		this_thread::sleep_for(chrono::milliseconds(1));
+	for (int i = 1; i <= num_threads; i++) {
+		dummyThreadPool.emplace_back([i]() { DummyThreadInTime(i, (i % roomMax) + 1); });
+		//dummyThreadPool.emplace_back([i]() { DummyThreadEternalChat(i, (i % roomMax) + 1); });
 	}
 
-	int a;
-	cin >> a;
-	isDummyRun = false;
-	for (int i = 0; i < 1000; i++) {
+	while (!isAllFinished);
+	spdlog::info("Dummy threads end...");
+
+	for (int i = 0; i < num_threads; i++) {
 		if (dummyThreadPool[i].joinable()) {
 			dummyThreadPool[i].join();
 		}
