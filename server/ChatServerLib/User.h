@@ -70,13 +70,41 @@ namespace ChatServerLib {
 		}
 
 		void SetPacket(char* data, UINT16 size) {
-			lock_guard<mutex> lock(pktMtx);
-			if (writePos + size >= PACKET_BUFFER_SIZE) {	//이 쓰기로 버퍼가 넘친다면 우선 안읽은 데이터를 버퍼 앞으로 복사하고 이어서 쓰기
-				auto noReadDataSize = writePos - readPos;
-				CopyMemory(&packetBuffer[0], &packetBuffer[readPos], noReadDataSize);
-				writePos = noReadDataSize;
-				readPos = 0;
+			bool isOverwrite = false;
+			UINT16 tryCnt = 0;
+
+			pktMtx.lock();
+			if (writePos + size >= PACKET_BUFFER_SIZE) {	//이 쓰기로 버퍼가 넘친다면
+				if (readPos != 0) {	//당길 수 있으면 안읽은 데이터부터 버퍼 맨 앞으로 당겨오기
+					auto noReadDataSize = writePos - readPos;
+					CopyMemory(&packetBuffer[0], &packetBuffer[readPos], noReadDataSize);
+					writePos = noReadDataSize;
+					readPos = 0;
+				}
 			}
+			if (writePos + size >= PACKET_BUFFER_SIZE) {	//당겼는데도 여전히 넘친다면 조금뒤에 시도
+				isOverwrite = true;
+				tryCnt = 3;
+			}
+			pktMtx.unlock();
+			
+			if (isOverwrite) {
+				while (tryCnt > 0) {
+					this_thread::sleep_for(chrono::milliseconds(1));
+					pktMtx.lock();
+					if (writePos + size < PACKET_BUFFER_SIZE) {
+						isOverwrite = false;
+						break;
+					}
+					pktMtx.unlock();
+					tryCnt--;
+				}
+			}
+			if (isOverwrite) {
+				return;
+			}
+
+			//이어서 쓰기
 			CopyMemory(&packetBuffer[writePos], data, size);
 			writePos += size;
 		}

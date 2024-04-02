@@ -97,8 +97,8 @@ int main(void) {
 	spdlog::info("Dummy threads start!");
 	vector<thread> dummyThreadPool;
 	for (int i = 1; i <= num_threads; i++) {
-		dummyThreadPool.emplace_back([i]() { DummyThreadInTime(i, (i % roomMax) + 1); });
-		//dummyThreadPool.emplace_back([i]() { DummyThreadEternalChat(i, (i % roomMax) + 1); });
+		//dummyThreadPool.emplace_back([i]() { DummyThreadInTime(i, (i % roomMax) + 1); });
+		dummyThreadPool.emplace_back([i]() { DummyThreadEternalChat(i, (i % roomMax) + 1); });
 	}
 
 	while (!isAllFinished);
