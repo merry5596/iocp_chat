@@ -32,8 +32,12 @@ namespace ChatServerLib {
 			curUserCnt = 0;
 		}
 
-		void SetPacket(UINT32 clientIndex, char* data, UINT16 size) {
-			userList[clientIndex]->SetPacket(data, size);
+		void Reset(UINT32 clientIndex) {
+			userList[clientIndex]->Reset();
+		}
+
+		bool SetPacket(UINT32 clientIndex, char* data, UINT16 size) {
+			return userList[clientIndex]->SetPacket(data, size);
 		}
 
 		PacketInfo GetPacket(UINT32 clientIndex) {

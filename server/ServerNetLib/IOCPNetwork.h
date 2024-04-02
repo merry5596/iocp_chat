@@ -31,6 +31,7 @@ namespace ServerNetLib {
 		void IOCPStart();
 		void IOCPEnd();
 		void SendData(UINT32 clientIndex, char* data, UINT16 size);
+		void CloseSocket(UINT32 clientIndex, bool isForce);
 
 		virtual void OnConnect(UINT32 clientIndex) {}
 		virtual void OnReceive(UINT32 clientIndex, char* data, UINT16 size) {}

@@ -9,6 +9,7 @@ namespace ChatServerLib {
 		packetManager = std::make_unique<PacketManager>();
 		packetManager->Init(config.get());
 		packetManager->SendData = [&](UINT32 clientIndex, char* data, UINT16 size) { SendData(clientIndex, data, size); };
+		packetManager->CloseSocket = [&](UINT32 clientIndex, bool isForce) { CloseSocket(clientIndex, isForce); };
 
 		IOCPInit(config.get());
 	}

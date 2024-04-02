@@ -32,6 +32,15 @@ namespace ChatServerLib {
 		User(UINT32 index) : clientIndex(index), writePos(0), readPos(0) {}
 		~User() {}
 
+		void Reset() {
+			if (state == (UINT16)USER_STATE::ROOM) {
+				LeaveRoom();
+			}
+			if (state == (UINT16)USER_STATE::LOGIN) {
+				SetLogout();
+			}
+		}
+
 		void SetLogin(char* name) {
 			strcpy_s(this->name, NAME_LEN, name);
 			state = (UINT16)USER_STATE::LOGIN;
@@ -69,7 +78,7 @@ namespace ChatServerLib {
 			return state;
 		}
 
-		void SetPacket(char* data, UINT16 size) {
+		bool SetPacket(char* data, UINT16 size) {
 			bool isOverwrite = false;
 			UINT16 tryCnt = 0;
 
@@ -84,13 +93,13 @@ namespace ChatServerLib {
 			}
 			if (writePos + size >= PACKET_BUFFER_SIZE) {	//당겼는데도 여전히 넘친다면 조금뒤에 시도
 				isOverwrite = true;
-				tryCnt = 3;
+				tryCnt = 5;
 			}
 			pktMtx.unlock();
 			
 			if (isOverwrite) {
 				while (tryCnt > 0) {
-					this_thread::sleep_for(chrono::milliseconds(1));
+					this_thread::sleep_for(chrono::milliseconds(100));
 					pktMtx.lock();
 					if (writePos + size < PACKET_BUFFER_SIZE) {
 						isOverwrite = false;
@@ -101,12 +110,16 @@ namespace ChatServerLib {
 				}
 			}
 			if (isOverwrite) {
-				return;
+				return false;
 			}
 
+			pktMtx.lock();
 			//이어서 쓰기
 			CopyMemory(&packetBuffer[writePos], data, size);
 			writePos += size;
+			pktMtx.unlock();
+
+			return true;
 		}
 
 		PacketInfo GetPacket() {

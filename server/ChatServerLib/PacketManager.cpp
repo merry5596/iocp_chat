@@ -54,8 +54,16 @@ namespace ChatServerLib {
 
 	//멀티스레드에서 접근 (clientQueue, user의 packetBuffer에 락 걸기)
 	void PacketManager::OnDataReceive(UINT32 clientIndex, char* data, UINT16 size) {
-		userManager->SetPacket(clientIndex, data, size);
-		EnqueueClient(clientIndex);
+		bool ret = userManager->SetPacket(clientIndex, data, size);
+		if (ret == false) {
+			//clientIndex 연결 끊기
+			CloseSocket(clientIndex, true);
+			userManager->Reset(clientIndex);
+			return;
+		}
+		if (ret == true) {
+			EnqueueClient(clientIndex);
+		}
 	}
 
 

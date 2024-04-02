@@ -101,6 +101,10 @@ namespace ServerNetLib {
 		clientPool[clientIndex]->SendData(data, size);
 	}
 
+	void IOCPNetwork::CloseSocket(UINT32 clientIndex, bool isForce) {
+		clientPool[clientIndex]->CloseSocket(isForce);
+	}
+
 	void IOCPNetwork::CreateClientPool(UINT16 clientPoolSize, UINT16 bufferSize) {
 		for (int i = 0; i < clientPoolSize; i++) {
 			clientPool.push_back(new ClientConnection(i, bufferSize));
