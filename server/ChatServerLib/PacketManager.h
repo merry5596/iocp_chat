@@ -39,6 +39,7 @@ namespace ChatServerLib {
 		void End();
 		void OnDataReceive(UINT32 clientIndex, char* data, UINT16 size);	//멀티스레드가 접근하는 함수
 		function<void(UINT32, char*, UINT16)> SendData;
+		function<void(UINT32, bool)> CloseSocket;
 	private:
 		void PacketThread();
 		void EnqueueClient(UINT32 clientIndex);
@@ -52,5 +53,4 @@ namespace ChatServerLib {
 		void ProcessRoomLeaveRequest(UINT32 clientIndex, char* data, UINT16 size);
 		void ProcessChatRequest(UINT32 clientIndex, char* data, UINT16 size);
 	};
-
 }

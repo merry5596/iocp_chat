@@ -54,8 +54,16 @@ namespace ChatServerLib {
 
 	//멀티스레드에서 접근 (clientQueue, user의 packetBuffer에 락 걸기)
 	void PacketManager::OnDataReceive(UINT32 clientIndex, char* data, UINT16 size) {
-		userManager->SetPacket(clientIndex, data, size);
-		EnqueueClient(clientIndex);
+		bool ret = userManager->SetPacket(clientIndex, data, size);
+		if (ret == false) {
+			//clientIndex 연결 끊기
+			CloseSocket(clientIndex, true);
+			userManager->Reset(clientIndex);
+			return;
+		}
+		if (ret == true) {
+			EnqueueClient(clientIndex);
+		}
 	}
 
 
@@ -76,7 +84,6 @@ namespace ChatServerLib {
 	}
 
 	void PacketManager::ProcessPacket(PacketInfo pktInfo) {
-		//printf("pktInfo.packetID: %d", pktInfo.packetID);
 		auto iter = processFuncDic.find(pktInfo.packetID);
 		if (iter != processFuncDic.end())
 		{
@@ -88,7 +95,10 @@ namespace ChatServerLib {
 		auto reqPkt = reinterpret_cast<EchoRequestPacket*>(data);
 		EchoResponsePacket resPkt;
 		resPkt.packetID = (UINT16)PACKET_ID::ECHO_RESPONSE;
-		cout << "[ECHO RES]" << endl;
+		resPkt.packetSize = sizeof(EchoResponsePacket);
+		strcpy_s(resPkt.msg, ECHO_MSG_LEN, reqPkt->msg);
+		spdlog::info("[ECHO RES]");
+		//cout << "[ECHO RES]" << endl;
 		SendData(clientIndex, (char*)&resPkt, size);
 	}
 
@@ -105,10 +115,10 @@ namespace ChatServerLib {
 		}
 		else {	//문제없음
 			resPkt.result = ERROR_CODE::NONE;
-			strcpy_s(resPkt.name, strlen(reqPkt->name) + 1, reqPkt->name);
+			strcpy_s(resPkt.name, NAME_LEN, reqPkt->name);
 		}
-
-		cout << "[LOGIN RES]" << endl;
+		spdlog::info("[LOGIN RES]");
+		//cout << "[LOGIN RES]" << endl;
 		SendData(clientIndex, (char*)&resPkt, sizeof(LoginResponsePacket));
 	}
 
@@ -152,21 +162,25 @@ namespace ChatServerLib {
 			resPkt.result = ERROR_CODE::NONE;
 		}
 
-		//Notify
-		RoomEnterNotifyPacket ntfPkt;
-		ntfPkt.packetID = (UINT16)PACKET_ID::ROOM_ENTER_NOTIFY;
-		ntfPkt.packetSize = sizeof(RoomEnterNotifyPacket);
-		strcpy_s(ntfPkt.name, NAME_LEN, userManager->GetUser(clientIndex)->GetName());
+		//방 입장 성공일 경우에만
+		if (resPkt.result == ERROR_CODE::NONE) {
+			//Notify
+			RoomEnterNotifyPacket ntfPkt;
+			ntfPkt.packetID = (UINT16)PACKET_ID::ROOM_ENTER_NOTIFY;
+			ntfPkt.packetSize = sizeof(RoomEnterNotifyPacket);
+			strcpy_s(ntfPkt.name, NAME_LEN, userManager->GetUser(clientIndex)->GetName());
 
-		unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(resPkt.roomNum);
-		for (auto receiverIndex : allUsers) {
-			if (receiverIndex != clientIndex) {
-				cout << "[ROOM ENTER NTF]" << endl;
-				SendData(receiverIndex, (char*)&ntfPkt, sizeof(RoomEnterNotifyPacket));
+			unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(resPkt.roomNum);
+			for (auto receiverIndex : allUsers) {
+				if (receiverIndex != clientIndex) {
+					spdlog::info("[ROOM ENTER NTF]");
+					//cout << "[ROOM ENTER NTF]" << endl;
+					SendData(receiverIndex, (char*)&ntfPkt, sizeof(RoomEnterNotifyPacket));
+				}
 			}
 		}
-
-		cout << "[ROOM ENTER RES]" << endl;
+		spdlog::info("[ROOM ENTER RES]");
+		//cout << "[ROOM ENTER RES]" << endl;
 		SendData(clientIndex, (char*)&resPkt, sizeof(RoomEnterResponsePacket));
 	}
 
@@ -187,25 +201,27 @@ namespace ChatServerLib {
 		roomManager->LeaveRoom(roomNum, clientIndex);
 		resPkt.result = ERROR_CODE::NONE;
 
-		//Notify
-		RoomLeaveNotifyPacket ntfPkt;
-		ntfPkt.packetID = (UINT16)PACKET_ID::ROOM_LEAVE_NOTIFY;
-		ntfPkt.packetSize = sizeof(RoomLeaveNotifyPacket);
-		strcpy_s(ntfPkt.name, NAME_LEN, userManager->GetUser(clientIndex)->GetName());
+		//방 퇴장 성공일 경우에만
+		if (resPkt.result == ERROR_CODE::NONE) {
+			//Notify
+			RoomLeaveNotifyPacket ntfPkt;
+			ntfPkt.packetID = (UINT16)PACKET_ID::ROOM_LEAVE_NOTIFY;
+			ntfPkt.packetSize = sizeof(RoomLeaveNotifyPacket);
+			strcpy_s(ntfPkt.name, NAME_LEN, userManager->GetUser(clientIndex)->GetName());
 
-
-		unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(roomNum);
-		for (auto receiverIndex : allUsers) {
-			if (receiverIndex != clientIndex) {
-				cout << "[ROOM LEAVE NTF]" << endl;
-				SendData(receiverIndex, (char*)&ntfPkt, sizeof(RoomLeaveNotifyPacket));
+			unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(roomNum);
+			for (auto receiverIndex : allUsers) {
+				if (receiverIndex != clientIndex) {
+					spdlog::info("[ROOM LEAVE NTF]");
+					//cout << "[ROOM LEAVE NTF]" << endl;
+					SendData(receiverIndex, (char*)&ntfPkt, sizeof(RoomLeaveNotifyPacket));
+				}
 			}
 		}
-
-		cout << "[ROOM LEAVE RES]" << endl;
+		spdlog::info("[ROOM LEAVE RES]");
+		//cout << "[ROOM LEAVE RES]" << endl;
 		SendData(clientIndex, (char*)&resPkt, sizeof(RoomLeaveResponsePacket));
 	}
-
 
 	void PacketManager::ProcessChatRequest(UINT32 clientIndex, char* data, UINT16 size) {
 		auto reqPkt = reinterpret_cast<ChatRequestPacket*>(data);
@@ -221,7 +237,8 @@ namespace ChatServerLib {
 		unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(roomNum);
 		for (auto receiverIndex : allUsers) {
 			if (receiverIndex != clientIndex) {
-				cout << "[CHAT NTF]" << endl;
+				spdlog::info("[CHAT NTF]");
+				//cout << "[CHAT NTF]" << endl;
 				SendData(receiverIndex, (char*)&ntfPkt, sizeof(ChatNotifyPacket));
 			}
 		}
@@ -231,7 +248,8 @@ namespace ChatServerLib {
 		resPkt.packetSize = sizeof(ChatResponsePacket);
 		resPkt.result = ERROR_CODE::NONE;
 
-		cout << "[CHAT RES]" << endl;
+		spdlog::info("[CHAT RES]");
+		//cout << "[CHAT RES]" << endl;
 		SendData(clientIndex, (char*)&resPkt, sizeof(ChatResponsePacket));
 	}
 

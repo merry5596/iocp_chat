@@ -22,13 +22,15 @@ namespace ChatServerLib {
 		void EnterRoom(UINT32 clientIndex) {
 			userDic.insert(clientIndex);
 			curUserCnt++;
-			cout << roomNum << "번 방 인원: " << userDic.size() << endl;
+			spdlog::info("[{0}번 방 입장] 인원: {1}", roomNum, userDic.size());
+			//cout << roomNum << "번 방 인원: " << userDic.size() << endl;
 		}
 
 		void LeaveRoom(UINT32 clientIndex) {
 			userDic.erase(clientIndex);
 			curUserCnt--;
-			cout << roomNum << "번 방 인원: " << userDic.size() << endl;
+			spdlog::info("[{0}번 방 퇴장] 인원: {1}", roomNum, userDic.size());
+			//cout << roomNum << "번 방 인원: " << userDic.size() << endl;
 		}
 
 		UINT16 GetCurUserCnt() const {

@@ -21,21 +21,21 @@ namespace ChatClientLib {
 
 	void ChatManager::OnReceive(char* data, UINT16 size, bool errflag, UINT32 err) {
 		if (errflag) {
-			printf("서버 통신 종료\n");
+			spdlog::info("서버 통신 종료");
 			notifyManager->AddDisconnectNotify();
 		}
 		else {
-			printf("[RECV] size: %d\n", size);
+			spdlog::debug("[RECV] size: {}", size);
 			packetBufferManager->OnDataReceive(data, size);
 		}
 	}
 
 	void ChatManager::OnSend(char* data, UINT16 size, bool errflag, UINT32 err) {
 		if (errflag) {
-			printf("error: %d\n", err);
+			spdlog::error("error : {}", err);
 		}
 		else {
-			printf("[SEND] size: %d\n", size);
+			spdlog::debug("[SEND] size: {}", size);
 		}
 	}
 

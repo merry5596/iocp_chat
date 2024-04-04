@@ -9,6 +9,7 @@ namespace ChatServerLib {
 		packetManager = std::make_unique<PacketManager>();
 		packetManager->Init(config.get());
 		packetManager->SendData = [&](UINT32 clientIndex, char* data, UINT16 size) { SendData(clientIndex, data, size); };
+		packetManager->CloseSocket = [&](UINT32 clientIndex, bool isForce) { CloseSocket(clientIndex, isForce); };
 
 		IOCPInit(config.get());
 	}
@@ -16,29 +17,36 @@ namespace ChatServerLib {
 	void ChatServer::Start() {
 		packetManager->Start();
 		IOCPStart();
+		spdlog::info("Chat Server Start!");
+		//printf("Chat Server Start! ");
 	}
 
 	void ChatServer::End() {
 		packetManager->End();
 		IOCPEnd();
-		printf("Chat Server End...");
+		spdlog::info("Chat Server End...");
+		//printf("Chat Server End...");
 	}
 
 	void ChatServer::OnConnect(UINT32 clientIndex) {
-		printf("[ACCEPT]client index: %d\n", clientIndex);
+		spdlog::info("[ACCEPT]client index: {}", clientIndex);
+		//printf("[ACCEPT]client index: %d\n", clientIndex);
 	}
 
 	void ChatServer::OnReceive(UINT32 clientIndex, char* data, UINT16 size) {
-		printf("[RECV]client index: %d, data size: %d\n", clientIndex, size);
+		spdlog::info("[RECV]client index: {0}, data size: {1}", clientIndex, size);
+		//printf("[RECV]client index: %d, data size: %d\n", clientIndex, size);
 		packetManager->OnDataReceive(clientIndex, data, size);
 	}
 
 	void ChatServer::OnSend(UINT32 clientIndex, UINT16 size) {
-		printf("[SEND]client index: %d, data size: %d\n", clientIndex, size);
+		spdlog::info("[SEND]client index: {0}, data size: {1}", clientIndex, size);
+		//printf("[SEND]client index: %d, data size: %d\n", clientIndex, size);
 	}
 
 	void ChatServer::OnDisconnect(UINT32 clientIndex) {
-		printf("[CLOSE]client index:%d\n", clientIndex);
+		spdlog::info("[CLOSE]client index:{}\n", clientIndex);
+		//printf("[CLOSE]client index:%d\n", clientIndex);
 		DisconnectPacket pkt;
 		pkt.packetID = (UINT16)PACKET_ID::DISCONNECT;
 		pkt.packetSize = sizeof(DisconnectPacket);

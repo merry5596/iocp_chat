@@ -5,6 +5,7 @@ const char* SERVER_IP = "127.0.0.1";
 
 int main(void) {
 	ChatClientLib::ChatManager chatManager;
+	spdlog::set_level(spdlog::level::warn);
 
 	//접속
 	string answer;
@@ -42,7 +43,7 @@ int main(void) {
 			ChatClientLib::Notify ntf = chatManager.GetNotify();
 			if (ntf.packetID != 0) {
 				//cout 처리
-				cout << "[UI출력]" << ntf.name;
+				cout << "[알림]" << ntf.name;
 				if (ntf.packetID == (UINT16)PACKET_ID::CHAT_NOTIFY) {
 					cout << " : " << ntf.msg << endl;
 				}
@@ -108,7 +109,8 @@ int main(void) {
 			//bool ret = chatManager.EchoMsg(msg);
 			bool ret = chatManager.ChatMsg(msg.c_str());
 			if (ret) {
-				cout << "---------------전송됨---------------" << endl;
+				cout << "[알림]";
+				cout << "\'" << msg << "\' 전송 완료" << endl;
 			}
 			getline(cin, msg);
 		}

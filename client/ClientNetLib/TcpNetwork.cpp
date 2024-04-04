@@ -11,7 +11,8 @@ namespace ClientNetLib {
 		WSADATA wsaData;
 		int ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
 		if (ret != 0) {
-			cout << "[ERROR]WSAStartup() error: " << WSAGetLastError() << endl;
+			spdlog::error("[ERROR]WSAStartup() error: {}", WSAGetLastError());
+			//cout << "[ERROR]WSAStartup() error: " << WSAGetLastError() << endl;
 			return false;
 		}
 
@@ -83,7 +84,8 @@ namespace ClientNetLib {
 	bool TcpNetwork::CreateSocket() {
 		sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (sock == INVALID_SOCKET) {
-			cout << "[ERROR]socket() error: " << GetLastError() << endl;
+			spdlog::error("[ERROR]socket() error: {}", GetLastError());
+			//cout << "[ERROR]socket() error: " << GetLastError() << endl;
 			return false;
 		}
 		return true;
@@ -96,7 +98,8 @@ namespace ClientNetLib {
 		inet_pton(AF_INET, SERVER_IP, &addr.sin_addr.s_addr);
 		auto ret = connect(sock, (SOCKADDR*)&addr, sizeof(SOCKADDR_IN));
 		if (ret != 0) {
-			cout << "[ERROR]connect() error: " << GetLastError() << endl;
+			spdlog::error("[ERROR]connect() error: {}", GetLastError());
+			//cout << "[ERROR]connect() error: " << GetLastError() << endl;
 			return false;
 		}
 		return true;
