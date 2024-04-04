@@ -202,7 +202,7 @@ namespace ChatServerLib {
 		resPkt.result = ERROR_CODE::NONE;
 
 		//방 퇴장 성공일 경우에만
-		if (resPkt.result = ERROR_CODE::NONE) {
+		if (resPkt.result == ERROR_CODE::NONE) {
 			//Notify
 			RoomLeaveNotifyPacket ntfPkt;
 			ntfPkt.packetID = (UINT16)PACKET_ID::ROOM_LEAVE_NOTIFY;
