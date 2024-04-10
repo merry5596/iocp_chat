@@ -17,7 +17,7 @@ namespace ServerNetLib {
 
 		void LoadConfig() {
 			cout << "[LOAD NETWORK CONFIG]" << endl;
-			configFilePath = L"C:\\iocp\\server\\iocp_server\\config.ini";
+			configFilePath = L"..\\iocp_server\\config.ini";
 			SERVER_PORT = GetPrivateProfileInt(L"NetworkConfig", L"SERVER_PORT", 8080, configFilePath.c_str());
 			cout << "SERVER_PORT : " << SERVER_PORT << endl;
 			CLIENT_POOL_SIZE = GetPrivateProfileInt(L"NetworkConfig", L"CLIENT_POOL_SIZE", 90, configFilePath.c_str());

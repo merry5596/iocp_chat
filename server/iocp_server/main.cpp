@@ -7,7 +7,7 @@ using namespace std;
 int main(void) {
 	auto file_logger = spdlog::basic_logger_mt("file_logger", "logs/logfile.txt");
 	spdlog::set_default_logger(file_logger);
-	spdlog::set_level(spdlog::level::debug);
+	spdlog::set_level(spdlog::level::warn);
 
 	ChatServerLib::ChatServer server;
 	server.Init();
