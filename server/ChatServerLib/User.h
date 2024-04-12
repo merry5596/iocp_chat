@@ -110,6 +110,7 @@ namespace ChatServerLib {
 				}
 			}
 			if (isOverwrite) {
+				spdlog::warn("{} : overwrite으로 인해 종료 예정", clientIndex);
 				return false;
 			}
 
@@ -126,20 +127,21 @@ namespace ChatServerLib {
 			PacketInfo pktInfo;
 			PACKET_HEADER* header;
 			UINT16 noReadDataSize;
-			pktMtx.lock();
-			noReadDataSize = writePos - readPos;
-			if (noReadDataSize < HEADER_SIZE) {	//헤더조차 다 안 온 상태
-				return PacketInfo();
-			}
-			header = (PACKET_HEADER*)&packetBuffer[readPos];
-			if (noReadDataSize < header->packetSize) {	//전체 패킷 덜 옴
-				//printf("body 덜옴. 와야할 패킷사이즈는 %d 인데, 읽고자 하는 버퍼 사이즈는 %d\n", header->packetSize, noReadDataSize);
-				return PacketInfo();
-			}
+			{
+				lock_guard<mutex> lock(pktMtx);
+				noReadDataSize = writePos - readPos;
+				if (noReadDataSize < HEADER_SIZE) {	//헤더조차 다 안 온 상태
+					return PacketInfo();
+				}
+				header = (PACKET_HEADER*)&packetBuffer[readPos];
+				if (noReadDataSize < header->packetSize) {	//전체 패킷 덜 옴
+					//printf("body 덜옴. 와야할 패킷사이즈는 %d 인데, 읽고자 하는 버퍼 사이즈는 %d\n", header->packetSize, noReadDataSize);
+					return PacketInfo();
+				}
 
-			pktInfo.packetData = &packetBuffer[readPos];
-			readPos += header->packetSize;
-			pktMtx.unlock();
+				pktInfo.packetData = &packetBuffer[readPos];
+				readPos += header->packetSize;
+			}
 
 			pktInfo.clientIndex = clientIndex;
 			pktInfo.packetID = header->packetID;
