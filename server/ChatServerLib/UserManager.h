@@ -49,10 +49,12 @@ namespace ChatServerLib {
 		}
 
 		bool SetLogin(char* name, UINT32 clientIndex) {
+			lock_guard<mutex> lock(mtx);
 			if (IsExistingName(name)) {	//중복됨
 				return false;
 			}
 			userList[clientIndex]->SetLogin(name);
+
 			userDic.insert(pair<char*, UINT32>(name, clientIndex));
 			curUserCnt++;
 
@@ -60,29 +62,35 @@ namespace ChatServerLib {
 		}
 
 		void SetLogout(UINT32 clientIndex) {
+			lock_guard<mutex> lock(mtx);
 			userDic.erase(userList[clientIndex]->GetName());
 			userList[clientIndex]->SetLogout();
 			curUserCnt--;
 		}
 
 		void EnterRoom(UINT32 clientIndex, UINT16 roomNum) {
+			lock_guard<mutex> lock(mtx);
 			userList[clientIndex]->EnterRoom(roomNum);
 		}
 
 		UINT16 LeaveRoom(UINT32 clientIndex) {
+			lock_guard<mutex> lock(mtx);
 			return userList[clientIndex]->LeaveRoom();
 		}
 
 		UINT16 GetRoomNum(UINT32 clientIndex) {
+			lock_guard<mutex> lock(mtx);
 			return userList[clientIndex]->GetRoomNum();
 		}
 
 		UINT16 GetUserState(UINT32 clientIndex) {
+			lock_guard<mutex> lock(mtx);
 			return userList[clientIndex]->GetState();
 		}
 
 		vector<UINT16> GetAllUserIndex() {
 			vector<UINT16> userIndexList;
+			lock_guard<mutex> lock(mtx);
 			for (auto& userPair : userDic) {
 				userIndexList.push_back(userPair.second);
 			}

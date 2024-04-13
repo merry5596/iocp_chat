@@ -80,66 +80,51 @@ namespace ChatServerLib {
 
 		bool SetPacket(char* data, UINT16 size) {
 			bool isOverwrite = false;
-			UINT16 tryCnt = 0;
-
-			pktMtx.lock();
-			if (writePos + size >= PACKET_BUFFER_SIZE) {	//이 쓰기로 버퍼가 넘친다면
-				if (readPos != 0) {	//당길 수 있으면 안읽은 데이터부터 버퍼 맨 앞으로 당겨오기
-					auto noReadDataSize = writePos - readPos;
-					CopyMemory(&packetBuffer[0], &packetBuffer[readPos], noReadDataSize);
-					writePos = noReadDataSize;
-					readPos = 0;
-				}
-			}
-			if (writePos + size >= PACKET_BUFFER_SIZE) {	//당겼는데도 여전히 넘친다면 조금뒤에 시도
-				isOverwrite = true;
-				tryCnt = 5;
-			}
-			pktMtx.unlock();
-			
-			if (isOverwrite) {
-				while (tryCnt > 0) {
-					this_thread::sleep_for(chrono::milliseconds(100));
-					pktMtx.lock();
-					if (writePos + size < PACKET_BUFFER_SIZE) {
-						isOverwrite = false;
-						break;
+			UINT16 tryCnt = 5;
+			while (tryCnt) {
+				{
+					lock_guard<mutex> lock(pktMtx);
+					if (writePos + size < PACKET_BUFFER_SIZE) {	//버퍼 넘치지 않으면 이어서 쓰고 완료
+						CopyMemory(&packetBuffer[writePos], data, size);
+						writePos += size;
+						return true;
 					}
-					pktMtx.unlock();
-					tryCnt--;
+					else if (readPos != 0) {	//당길 수 있으면 안읽은 데이터부터 버퍼 맨 앞으로 당겨오기
+						auto noReadDataSize = writePos - readPos;
+						CopyMemory(&packetBuffer[0], &packetBuffer[readPos], noReadDataSize);
+						writePos = noReadDataSize;
+						readPos = 0;
+						continue;
+					}
 				}
-			}
-			if (isOverwrite) {
-				return false;
+				//당길 수 없으면 읽기 기다리기 5회까지)
+				this_thread::sleep_for(chrono::milliseconds(100));
+				tryCnt--;
 			}
 
-			pktMtx.lock();
-			//이어서 쓰기
-			CopyMemory(&packetBuffer[writePos], data, size);
-			writePos += size;
-			pktMtx.unlock();
-
-			return true;
+			spdlog::warn("{} : overwrite으로 인해 종료 예정", clientIndex);
+			return false;
 		}
 
 		PacketInfo GetPacket() {
 			PacketInfo pktInfo;
 			PACKET_HEADER* header;
 			UINT16 noReadDataSize;
-			pktMtx.lock();
-			noReadDataSize = writePos - readPos;
-			if (noReadDataSize < HEADER_SIZE) {	//헤더조차 다 안 온 상태
-				return PacketInfo();
-			}
-			header = (PACKET_HEADER*)&packetBuffer[readPos];
-			if (noReadDataSize < header->packetSize) {	//전체 패킷 덜 옴
-				//printf("body 덜옴. 와야할 패킷사이즈는 %d 인데, 읽고자 하는 버퍼 사이즈는 %d\n", header->packetSize, noReadDataSize);
-				return PacketInfo();
-			}
+			{
+				lock_guard<mutex> lock(pktMtx);
+				noReadDataSize = writePos - readPos;
+				if (noReadDataSize < HEADER_SIZE) {	//헤더조차 다 안 온 상태
+					return PacketInfo();
+				}
+				header = (PACKET_HEADER*)&packetBuffer[readPos];
+				if (noReadDataSize < header->packetSize) {	//전체 패킷 덜 옴
+					//printf("body 덜옴. 와야할 패킷사이즈는 %d 인데, 읽고자 하는 버퍼 사이즈는 %d\n", header->packetSize, noReadDataSize);
+					return PacketInfo();
+				}
 
-			pktInfo.packetData = &packetBuffer[readPos];
-			readPos += header->packetSize;
-			pktMtx.unlock();
+				pktInfo.packetData = &packetBuffer[readPos];
+				readPos += header->packetSize;
+			}
 
 			pktInfo.clientIndex = clientIndex;
 			pktInfo.packetID = header->packetID;
