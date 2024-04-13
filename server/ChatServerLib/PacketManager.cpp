@@ -13,6 +13,8 @@ namespace ChatServerLib {
 		roomManager = new RoomManager;
 		roomManager->Init(config->MAX_ROOM_CNT, config->MAX_ROOM_USER_CNT);
 
+		packetThreadPoolSize = config->PACKET_THREAD_POOL_SIZE;
+
 		processFuncDic = unordered_map<UINT16, ProcessFunction>();
 		processFuncDic[(UINT16)PACKET_ID::ECHO_REQUEST] = &PacketManager::ProcessEchoRequest;
 		processFuncDic[(UINT16)PACKET_ID::LOGIN_REQUEST] = &PacketManager::ProcessLoginRequest;
@@ -24,14 +26,23 @@ namespace ChatServerLib {
 
 	void PacketManager::Start() {
 		isPacketRun = true;
-		packetThread = thread([&]() { PacketThread();  });
+		for (int i = 0; i < packetThreadPoolSize; i++) {
+			packetThreadPool.emplace_back(thread([&]() { PacketThread();  }));
+		}
+
+//		packetThread = thread([&]() { PacketThread();  });
 	}
 
 	void PacketManager::End() {
 		isPacketRun = false;
-		if (packetThread.joinable()) {
-			packetThread.join();
+		for (auto& thread : packetThreadPool) {
+			if (thread.joinable()) {
+				thread.join();
+			}
 		}
+//		if (packetThread.joinable()) {
+//			packetThread.join();
+//		}
 	}
 
 	void PacketManager::PacketThread() {
@@ -102,10 +113,8 @@ namespace ChatServerLib {
 		SendData(clientIndex, (char*)&resPkt, size);
 	}
 
-
 	void PacketManager::ProcessLoginRequest(UINT32 clientIndex, char* data, UINT16 size) {
 		auto reqPkt = reinterpret_cast<LoginRequestPacket*>(data);
-
 		LoginResponsePacket resPkt;
 		resPkt.packetID = (UINT16)PACKET_ID::LOGIN_RESPONSE;
 		resPkt.packetSize = sizeof(LoginResponsePacket);

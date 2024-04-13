@@ -20,7 +20,9 @@ namespace ChatServerLib {
 	class UserManager;
 	class PacketManager {
 	private:
-		thread packetThread;
+//		thread packetThread;
+		vector<thread> packetThreadPool;
+		UINT16 packetThreadPoolSize;
 		bool isPacketRun;
 
 		queue<UINT32> clientQueue;
