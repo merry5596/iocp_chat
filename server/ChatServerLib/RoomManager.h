@@ -12,7 +12,7 @@ namespace ChatServerLib {
 		vector<Room*> roomList;
 		UINT16 maxRoomCnt;
 		UINT16 maxRoomUserCnt;
-		mutex mtx;
+		shared_mutex rwMtx;
 
 	public:
 		void Init(const UINT16 maxRoomCnt, const UINT16 maxRoomUserCnt) {
@@ -25,17 +25,20 @@ namespace ChatServerLib {
 		}
 
 		void EnterRoom(UINT16 roomNum, UINT32 clientIndex) {
-			lock_guard<mutex> lock(mtx);
+			//writelock
+			unique_lock<shared_mutex> lock(rwMtx);
 			roomList[roomNum]->EnterRoom(clientIndex);
 		}
 
 		void LeaveRoom(UINT16 roomNum, UINT32 clientIndex) {
-			lock_guard<mutex> lock(mtx);
+			//writelock
+			unique_lock<shared_mutex> lock(rwMtx);
 			roomList[roomNum]->LeaveRoom(clientIndex);
 		}
 
 		UINT16 EnterRandomRoom(UINT32 clientIndex) {
-			lock_guard<mutex> lock(mtx);
+			//writelock
+			unique_lock<shared_mutex> lock(rwMtx);
 			UINT16 roomNum = FindOptimalRoomNum();
 			if (roomNum != 0) {
 				roomList[roomNum]->EnterRoom(clientIndex);
@@ -75,17 +78,20 @@ namespace ChatServerLib {
 			if (roomNum < 1 || roomNum > maxRoomCnt) {
 				return nullptr;
 			}
-			lock_guard<mutex> lock(mtx);
+			//readlock
+			shared_lock<shared_mutex> lock(rwMtx);
 			return roomList[roomNum];
 		}
 
 		bool IsFull(UINT16 roomNum) {
-			lock_guard<mutex> lock(mtx);
+			//readlock
+			shared_lock<shared_mutex> lock(rwMtx);
 			return roomList[roomNum]->IsFull();
 		}
 
 		unordered_set<UINT32> GetAllUserIndex(UINT16 roomNum) {
-			lock_guard<mutex> lock(mtx);
+			//readlock
+			shared_lock<shared_mutex> lock(rwMtx);
 			return roomList[roomNum]->GetAllUserIndex();
 		}
 	};
