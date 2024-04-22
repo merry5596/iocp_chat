@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <mutex>
+#include <shared_mutex>
 #include <iostream>
 using namespace std;
 
@@ -16,7 +17,8 @@ namespace ChatServerLib {
 		UINT32 curUserCnt;
 		vector<User*> userList;
 		unordered_map<string, UINT32> userDic;
-		mutex mtx;
+		shared_mutex rwMtx;
+
 	public:
 		UserManager() {}
 		~UserManager() {
@@ -49,12 +51,12 @@ namespace ChatServerLib {
 		}
 
 		bool SetLogin(char* name, UINT32 clientIndex) {
-			lock_guard<mutex> lock(mtx);
+			//writelock
+			unique_lock<shared_mutex> lock(rwMtx);
 			if (IsExistingName(name)) {	//중복됨
 				return false;
 			}
 			userList[clientIndex]->SetLogin(name);
-
 			userDic.insert(pair<char*, UINT32>(name, clientIndex));
 			curUserCnt++;
 
@@ -62,35 +64,41 @@ namespace ChatServerLib {
 		}
 
 		void SetLogout(UINT32 clientIndex) {
-			lock_guard<mutex> lock(mtx);
+			//writelock
+			unique_lock<shared_mutex> lock(rwMtx);
 			userDic.erase(userList[clientIndex]->GetName());
 			userList[clientIndex]->SetLogout();
 			curUserCnt--;
 		}
 
 		void EnterRoom(UINT32 clientIndex, UINT16 roomNum) {
-			lock_guard<mutex> lock(mtx);
+			//writelock
+			unique_lock<shared_mutex> lock(rwMtx);
 			userList[clientIndex]->EnterRoom(roomNum);
 		}
 
 		UINT16 LeaveRoom(UINT32 clientIndex) {
-			lock_guard<mutex> lock(mtx);
+			//writelock
+			unique_lock<shared_mutex> lock(rwMtx);
 			return userList[clientIndex]->LeaveRoom();
 		}
 
 		UINT16 GetRoomNum(UINT32 clientIndex) {
-			lock_guard<mutex> lock(mtx);
+			//readlock
+			shared_lock<shared_mutex> lock(rwMtx);
 			return userList[clientIndex]->GetRoomNum();
 		}
 
 		UINT16 GetUserState(UINT32 clientIndex) {
-			lock_guard<mutex> lock(mtx);
+			//readlock
+			shared_lock<shared_mutex> lock(rwMtx); 
 			return userList[clientIndex]->GetState();
 		}
 
 		vector<UINT16> GetAllUserIndex() {
 			vector<UINT16> userIndexList;
-			lock_guard<mutex> lock(mtx);
+			//readlock
+			shared_lock<shared_mutex> lock(rwMtx);
 			for (auto& userPair : userDic) {
 				userIndexList.push_back(userPair.second);
 			}

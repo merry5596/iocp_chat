@@ -29,8 +29,6 @@ namespace ChatServerLib {
 		for (int i = 0; i < packetThreadPoolSize; i++) {
 			packetThreadPool.emplace_back(thread([&]() { PacketThread();  }));
 		}
-
-//		packetThread = thread([&]() { PacketThread();  });
 	}
 
 	void PacketManager::End() {
@@ -40,9 +38,6 @@ namespace ChatServerLib {
 				thread.join();
 			}
 		}
-//		if (packetThread.joinable()) {
-//			packetThread.join();
-//		}
 	}
 
 	void PacketManager::PacketThread() {
