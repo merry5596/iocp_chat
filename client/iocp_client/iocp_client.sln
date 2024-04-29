@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ChatClientLib", "..\ChatCli
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DummyClient", "..\DummyClient\DummyClient.vcxproj", "{B96E5F96-2616-4E37-A7AB-AAFE2E4E4D37}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ClientWrapper", "..\ClientWrapper\ClientWrapper.vcxproj", "{2895A8A2-D930-4B03-8FF7-99F6A6D779C3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -61,6 +63,14 @@ Global
 		{B96E5F96-2616-4E37-A7AB-AAFE2E4E4D37}.Release|x64.Build.0 = Release|x64
 		{B96E5F96-2616-4E37-A7AB-AAFE2E4E4D37}.Release|x86.ActiveCfg = Release|Win32
 		{B96E5F96-2616-4E37-A7AB-AAFE2E4E4D37}.Release|x86.Build.0 = Release|Win32
+		{2895A8A2-D930-4B03-8FF7-99F6A6D779C3}.Debug|x64.ActiveCfg = Debug|x64
+		{2895A8A2-D930-4B03-8FF7-99F6A6D779C3}.Debug|x64.Build.0 = Debug|x64
+		{2895A8A2-D930-4B03-8FF7-99F6A6D779C3}.Debug|x86.ActiveCfg = Debug|Win32
+		{2895A8A2-D930-4B03-8FF7-99F6A6D779C3}.Debug|x86.Build.0 = Debug|Win32
+		{2895A8A2-D930-4B03-8FF7-99F6A6D779C3}.Release|x64.ActiveCfg = Release|x64
+		{2895A8A2-D930-4B03-8FF7-99F6A6D779C3}.Release|x64.Build.0 = Release|x64
+		{2895A8A2-D930-4B03-8FF7-99F6A6D779C3}.Release|x86.ActiveCfg = Release|Win32
+		{2895A8A2-D930-4B03-8FF7-99F6A6D779C3}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

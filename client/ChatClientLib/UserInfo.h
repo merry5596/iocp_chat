@@ -40,6 +40,7 @@ namespace ChatClientLib {
 		//Getters
 		UINT16 GetState() const { return state; }
 		char* GetName() { return name; }
+		UINT16 GetRoomNum() const { return roomNum; }
 	};
 
 }

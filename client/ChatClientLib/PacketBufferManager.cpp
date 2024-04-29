@@ -2,11 +2,11 @@
 
 namespace ChatClientLib {
 
-	void PacketBufferManager::Init(NotifyManager* notifyManager) {
+	void PacketBufferManager::Init(NotifyManager* notifyManager, UserInfo* userInfo) {
 		writePos = 0;
 		readPos = 0;
-		userInfo = make_unique<UserInfo>();
 		this->notifyManager = notifyManager;
+		this->userInfo = userInfo;
 
 		processFuncDic = unordered_map<UINT16, ProcessFunction>();
 		processFuncDic[(UINT16)PACKET_ID::LOGIN_RESPONSE] = &PacketBufferManager::ProcessLoginResponse;
@@ -26,9 +26,11 @@ namespace ChatClientLib {
 	}
 
 	void PacketBufferManager::End() {
-		isPacketRun = false;
-		if (packetThread.joinable()) {
-			packetThread.join();
+		if (isPacketRun) {
+			isPacketRun = false;
+			if (packetThread.joinable()) {
+				packetThread.join();
+			}
 		}
 	}
 

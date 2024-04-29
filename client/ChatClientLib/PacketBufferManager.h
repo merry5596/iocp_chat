@@ -27,8 +27,6 @@ namespace ChatClientLib {
 		thread packetThread;
 		bool isPacketRun;
 
-		unique_ptr<UserInfo> userInfo;
-
 		//응답패킷처리 완료시 플래그
 		bool isLoginResCompleted;
 		UINT16 loginResult;
@@ -40,12 +38,13 @@ namespace ChatClientLib {
 		UINT16 roomLeaveResult;
 
 		NotifyManager* notifyManager;
+		UserInfo* userInfo;
 
 		//패킷처리 함수
 		typedef void (PacketBufferManager::* ProcessFunction)(char*);
 		unordered_map<UINT16, ProcessFunction> processFuncDic;
 	public:
-		void Init(NotifyManager* notifyManager);
+		void Init(NotifyManager* notifyManager, UserInfo* userInfo);
 		void Start();
 		void End();
 

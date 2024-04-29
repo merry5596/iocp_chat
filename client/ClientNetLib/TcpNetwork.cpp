@@ -31,10 +31,12 @@ namespace ClientNetLib {
 	}
 
 	void TcpNetwork::End() {
-		isRecvRun = false;
-		closesocket(sock);
-		if (recvThread.joinable()) {
-			recvThread.join();
+		if (isRecvRun) {
+			isRecvRun = false;
+			closesocket(sock);
+			if (recvThread.joinable()) {
+				recvThread.join();
+			}
 		}
 	}
 

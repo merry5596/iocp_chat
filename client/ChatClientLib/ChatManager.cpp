@@ -3,20 +3,25 @@
 namespace ChatClientLib {
 
 	bool ChatManager::Init(const UINT16 SERVER_PORT, const char* SERVER_IP) {
+		userInfo = make_unique<UserInfo>();
 		notifyManager = make_unique<NotifyManager>();
 		packetBufferManager = make_unique<PacketBufferManager>();
-		packetBufferManager->Init(notifyManager.get());
+		packetBufferManager->Init(notifyManager.get(), userInfo.get());
 		return TcpNetwork::Init(SERVER_PORT, SERVER_IP);
 	}
 
 	void ChatManager::Start() {
 		packetBufferManager->Start();
 		TcpNetwork::Start();
+		isRun = true;
 	}
 
 	void ChatManager::End() {
-		packetBufferManager->End();
-		TcpNetwork::End();
+		if (isRun) {
+			packetBufferManager->End();
+			TcpNetwork::End();
+			isRun = false;
+		}
 	}
 
 	void ChatManager::OnReceive(char* data, UINT16 size, bool errflag, UINT32 err) {
@@ -105,4 +110,13 @@ namespace ChatClientLib {
 		return notifyManager->GetNotify();
 	}
 
+	UINT16 ChatManager::GetUserState() const {
+		return userInfo->GetState();
+	}
+	char* ChatManager::GetUserNickName() {
+		return userInfo->GetName();
+	}
+	UINT16 ChatManager::GetUserRoomNum() const {
+		return userInfo->GetRoomNum();
+	}
 }
