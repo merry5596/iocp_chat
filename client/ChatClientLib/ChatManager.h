@@ -14,6 +14,8 @@ namespace ChatClientLib {
 	private:
 		unique_ptr<PacketBufferManager> packetBufferManager;
 		unique_ptr<NotifyManager> notifyManager;
+		unique_ptr<UserInfo> userInfo;
+		bool isRun = false;
 
 	public:
 		bool Init(const UINT16 SERVER_PORT, const char* SERVER_IP);
@@ -27,6 +29,9 @@ namespace ChatClientLib {
 		bool EchoMsg(const char* msg);
 		bool ChatMsg(const char* msg);
 		Notify GetNotify();
+		UINT16 GetUserState() const;
+		char* GetUserNickName();
+		UINT16 GetUserRoomNum() const;
 	};
 
 }

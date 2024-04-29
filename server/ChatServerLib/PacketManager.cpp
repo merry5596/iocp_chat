@@ -261,7 +261,22 @@ namespace ChatServerLib {
 		if (userManager->GetUserState(clientIndex) == (UINT16)USER_STATE::ROOM) {	//방에 있으면 방 나가기 처리 먼저
 			auto roomNum = userManager->LeaveRoom(clientIndex);
 			roomManager->LeaveRoom(roomNum, clientIndex);
+			//Notify
+			RoomLeaveNotifyPacket ntfPkt;
+			ntfPkt.packetID = (UINT16)PACKET_ID::ROOM_LEAVE_NOTIFY;
+			ntfPkt.packetSize = sizeof(RoomLeaveNotifyPacket);
+			strcpy_s(ntfPkt.name, NAME_LEN, userManager->GetUser(clientIndex)->GetName());
+
+			unordered_set<UINT32> allUsers = roomManager->GetAllUserIndex(roomNum);
+			for (auto receiverIndex : allUsers) {
+				if (receiverIndex != clientIndex) {
+					spdlog::info("[ROOM LEAVE NTF]");
+					//cout << "[ROOM LEAVE NTF]" << endl;
+					SendData(receiverIndex, (char*)&ntfPkt, sizeof(RoomLeaveNotifyPacket));
+				}
+			}
 		}
+
 		userManager->SetLogout(clientIndex);
 	}
 

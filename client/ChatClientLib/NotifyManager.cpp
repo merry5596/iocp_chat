@@ -15,6 +15,7 @@ namespace ChatClientLib {
 		Notify ntf;
 		ntf.packetID = (UINT16)PACKET_ID::ROOM_ENTER_NOTIFY;
 		strcpy_s(ntf.name, NAME_LEN, name);
+		strcpy_s(ntf.msg, CHAT_MSG_LEN, "");
 		lock_guard<mutex> lock(mtx);
 		notifyQueue.push(ntf);
 	}
@@ -23,6 +24,7 @@ namespace ChatClientLib {
 		Notify ntf;
 		ntf.packetID = (UINT16)PACKET_ID::ROOM_LEAVE_NOTIFY;
 		strcpy_s(ntf.name, NAME_LEN, name);
+		strcpy_s(ntf.msg, CHAT_MSG_LEN, "");
 		lock_guard<mutex> lock(mtx);
 		notifyQueue.push(ntf);
 	}
